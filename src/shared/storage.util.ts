@@ -2,12 +2,15 @@
 
 /**
  * Recupera uno o più elementi da chrome.storage.local.
- * @param keys Una chiave singola, un array di chiavi, un oggetto, o null per ottenere tutto.
+ * @param keys Una chiave singola, un array di chiavi, un oggetto (con valori qualsiasi), o null per ottenere tutto.
  * @returns Una Promise che risolve con un oggetto contenente gli elementi richiesti.
  */
-export const storageGet = (keys: string | string[] | { [key: string]: any } | null): Promise<{ [key: string]: any }> =>
+export const storageGet = (
+    keys: string | string[] | Record<string, unknown> | null
+): Promise<Record<string, unknown>> =>
     new Promise((resolve, reject) => {
-        chrome.storage.local.get(keys, (items: { [key: string]: any }) => {
+        chrome.storage.local.get(keys, (items: Record<string, unknown>) => {
+            // chrome.runtime.lastError è già tipizzato come LastError | undefined
             if (chrome.runtime.lastError) {
                 return reject(chrome.runtime.lastError);
             }
@@ -20,7 +23,7 @@ export const storageGet = (keys: string | string[] | { [key: string]: any } | nu
  * @param items Un oggetto con una o più coppie chiave/valore da salvare.
  * @returns Una Promise che risolve quando l'operazione è completa.
  */
-export const storageSet = (items: { [key: string]: any }): Promise<void> =>
+export const storageSet = (items: Record<string, unknown>): Promise<void> =>
     new Promise((resolve, reject) => {
         chrome.storage.local.set(items, () => {
             if (chrome.runtime.lastError) {
@@ -47,14 +50,13 @@ export const storageRemove = (keys: string | string[]): Promise<void> =>
 
 /**
  * Controlla se un errore è un errore di quota di chrome.storage.
- * @param error L'oggetto errore da controllare.
+ * @param error L'oggetto errore (o qualsiasi valore) da controllare.
  * @returns True se l'errore sembra essere un errore di quota, altrimenti false.
  */
-export function isQuotaError(error: any): boolean {
-    // Controlla se error esiste e ha una proprietà message di tipo stringa
-    return (
-        error &&
-        typeof error.message === 'string' &&
-        (error.message.includes('QUOTA_BYTES') || error.message.toLowerCase().includes('quota'))
-    );
+export function isQuotaError(error: unknown): boolean {
+    // Type guard per verificare se è un oggetto simile a Error con 'message'
+    if (typeof error === 'object' && error !== null && 'message' in error && typeof error.message === 'string') {
+        return error.message.includes('QUOTA_BYTES') || error.message.toLowerCase().includes('quota');
+    }
+    return false;
 }

@@ -115,9 +115,9 @@ async function displayStorageInfo(): Promise<void> {
     try {
         const usageInBytes: number = await chrome.storage.local.getBytesInUse();
         storageInfoElement.textContent = `Storage: ${formatBytes(usageInBytes)} usati`;
-    } catch (error: any) {
-        console.error('Errore durante il calcolo dello spazio usato:', error);
-        if (storageInfoElement) storageInfoElement.textContent = 'Errore nel caricare info storage.';
+    } catch (error: unknown) {
+        console.error('Errore calcolo spazio usato:', error);
+        storageInfoElement.textContent = 'Errore info storage.';
     }
 }
 
@@ -162,21 +162,20 @@ async function initializeLayoutSlider(): Promise<void> {
     const savePercentPreference = async (percentValue: string): Promise<void> => {
         try {
             await storageSet({ [STORAGE_KEY_LAYOUT_PREFERENCE]: parseInt(percentValue, 10) });
-            // console.log(`Preferenza layout salvata: ${percentValue}%`);
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error('Errore salvataggio preferenza layout:', error);
         }
     };
 
     try {
         const items = await storageGet(STORAGE_KEY_LAYOUT_PREFERENCE);
-        const savedValue: number | undefined = items[STORAGE_KEY_LAYOUT_PREFERENCE];
+        const savedValue: unknown = items[STORAGE_KEY_LAYOUT_PREFERENCE];
         const initialValue: string = (savedValue ?? percentSlider.value).toString();
         percentSlider.value = initialValue;
         applyMinPercent(initialValue);
-    } catch (error: any) {
-        console.error('Errore caricamento preferenza layout:', error);
-        applyMinPercent(percentSlider.value);
+    } catch (error: unknown) {
+        console.error('Errore caricamento pref layout:', error);
+        if (percentSlider) applyMinPercent(percentSlider.value);
     }
 
     percentSlider.addEventListener('input', (event: Event) => {
@@ -187,7 +186,6 @@ async function initializeLayoutSlider(): Promise<void> {
         const target = event.target as HTMLInputElement;
         if (target) savePercentPreference(target.value);
     });
-    // console.log("Slider layout inizializzato."); // Log meno verboso
 }
 
 /**
@@ -201,7 +199,7 @@ async function loadInitialData(): Promise<void> {
     const sidebarList = sidebarListElement;
 
     try {
-        const items: { [key: string]: any } = await storageGet(null);
+        const items: Record<string, unknown> = await storageGet(null);
         allFetchedItems = Object.entries(items)
             .filter(
                 ([key, value]) =>
@@ -244,12 +242,11 @@ async function loadInitialData(): Promise<void> {
         updateWorkspaceMessageVisibility(
             'workspace-content',
             'workspace-message',
-            // Usa notazione a parentesi quadre
             `.${styles['workspace-image-container']}`
         );
         setupEventListeners();
         console.log(`Caricate ${captureKeys.length} catture.`);
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('Errore grave durante caricamento dati iniziali:', error);
         sidebarLoadingElement?.remove();
         sidebarList.innerHTML = '';
@@ -340,14 +337,11 @@ function handleWorkspaceItemCloseClick(itemId: string): void {
 async function handleModalConfirm(): Promise<void> {
     if (!itemToDeleteId) return;
     const idToDelete: string = itemToDeleteId;
-    // console.log(`Conferma eliminazione: ${idToDelete}`);
-
     hideModal();
     itemToDeleteId = null;
 
     try {
         await storageRemove(idToDelete);
-        // console.log(`Elemento ${idToDelete} rimosso.`);
         delete allFetchedItems[idToDelete];
 
         sidebarListElement?.querySelector(`[data-id="${idToDelete}"]`)?.remove();
@@ -367,9 +361,10 @@ async function handleModalConfirm(): Promise<void> {
             `.${styles['workspace-image-container']}`
         );
         await displayStorageInfo();
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error(`Errore eliminazione ${idToDelete}:`, error);
-        alert(`Errore durante l'eliminazione: ${error.message}`);
+        const message = error instanceof Error ? error.message : String(error);
+        alert(`Errore durante l'eliminazione: ${message}`);
     }
 }
 

@@ -4,7 +4,6 @@
 import {
     MSG_TYPE_SAVE_SUCCESS,
     MSG_TYPE_SAVE_ERROR,
-    MSG_TYPE_CAPTURE_ERROR,
     MSG_TYPE_SELECTION_COMPLETE, // Usato per inviare il messaggio
 } from '../shared/constants';
 
@@ -57,13 +56,6 @@ interface AppState {
     elements: AppElements;
 }
 
-// Interfaccia per i messaggi ricevuti dal background script
-interface BackgroundMessage {
-    type: string; // Usa le costanti MSG_TYPE_* importate
-    message?: string;
-    // Aggiungere altri campi se necessario
-}
-
 // Interfaccia per i dati inviati al background script
 interface SelectionPayload extends Rect {
     // Estende Rect
@@ -73,28 +65,43 @@ interface SelectionPayload extends Rect {
 // --- Inizio IIFE ---
 (function () {
     // Funzione di logging con tipo per rest parameters
-    const log = (...args: any[]): void => console.log('[WebAreaSaver]', ...args);
+    const log = (...args: unknown[]): void => console.log('[WebAreaSaver]', ...args);
 
     // --- Listener Messaggi Background ---
     const handleBackgroundMessages = (
-        message: BackgroundMessage | any,
-        _sender: chrome.runtime.MessageSender,
-        _sendResponse: (response?: any) => void
+        message: unknown, // Usa unknown
+        _sender: chrome.runtime.MessageSender, // Prefisso se non usato
+        _sendResponse: (response?: unknown) => void // Prefisso e unknown
     ): boolean | undefined => {
+        // Type guard per sicurezza
+        if (
+            typeof message !== 'object' ||
+            message === null ||
+            !('type' in message) ||
+            typeof message.type !== 'string'
+        ) {
+            log('WARN: Ricevuto messaggio background non valido:', message);
+            return false;
+        }
+        // Ora possiamo accedere a message.type in sicurezza
         log('Messaggio ricevuto dal background:', message);
 
-        // *** NUOVO: Messaggio per attivare l'UI ***
-        if (message?.type === 'ACTIVATE_CAPTURE') {
+        // Usa costante se definita per ACTIVATE_CAPTURE
+        if (message.type === 'ACTIVATE_CAPTURE') {
             activateCaptureUI();
-            return false; // O true se inviassimo risposta
+            return false;
         }
 
-        if (message?.type === MSG_TYPE_SAVE_SUCCESS) {
-            showToast(message.message || 'Salvataggio completato');
-        } else if (message?.type === MSG_TYPE_SAVE_ERROR || message?.type === MSG_TYPE_CAPTURE_ERROR) {
-            showToast(message.message || 'Errore durante il salvataggio/cattura', true);
+        // Assumi che se il tipo è SAVE o ERROR, 'message' esista come stringa
+        const msgContent = 'message' in message && typeof message.message === 'string' ? message.message : undefined;
+
+        if (message.type === MSG_TYPE_SAVE_SUCCESS) {
+            showToast(msgContent || 'Salvataggio completato');
+        } else if (message.type === MSG_TYPE_SAVE_ERROR /* || message.type === MSG_TYPE_CAPTURE_ERROR */) {
+            // MSG_TYPE_CAPTURE_ERROR non definito qui
+            showToast(msgContent || 'Errore durante il salvataggio/cattura', true);
         } else {
-            log('WARN: Ricevuto messaggio non gestito:', message);
+            log('WARN: Ricevuto tipo messaggio non gestito:', message.type);
         }
         return false;
     };
@@ -169,10 +176,10 @@ interface SelectionPayload extends Rect {
     };
 
     // Throttle function (tipi base, 'this' rimane any per semplicità)
-    const simpleThrottle = <T extends (...args: any[]) => any>(func: T, limit: number): T => {
+    const simpleThrottle = <T extends (...args: unknown[]) => unknown>(func: T, limit: number): T => {
         let wait = false;
         // Usiamo una function expression per preservare 'this'
-        return function (this: any, ...args: Parameters<T>): ReturnType<T> | void {
+        return function (this: unknown, ...args: Parameters<T>): ReturnType<T> | void {
             if (!wait) {
                 const result = func.apply(this, args);
                 wait = true;
@@ -561,7 +568,7 @@ interface SelectionPayload extends Rect {
                 // Invia messaggio al background script usando la costante e i dati tipizzati
                 chrome.runtime.sendMessage(
                     { type: MSG_TYPE_SELECTION_COMPLETE, data: dataToSend },
-                    (response?: any) => {
+                    (response?: unknown) => {
                         // Callback opzionale
                         if (chrome.runtime.lastError) {
                             log('Errore invio messaggio:', chrome.runtime.lastError.message);
@@ -572,11 +579,11 @@ interface SelectionPayload extends Rect {
                         }
                     }
                 );
-            } catch (error: any) {
+            } catch (error: unknown) {
                 log('Eccezione durante sendMessage:', error);
-                showToast(`Errore imprevisto estensione: ${error.message}`, true);
+                const message = error instanceof Error ? error.message : String(error);
+                showToast(`Errore estensione: ${message}`, true);
             } finally {
-                // Cleanup viene eseguito DOPO l'invio (o il tentativo di invio)
                 cleanup();
             }
         }, delayMs);

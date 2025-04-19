@@ -24,7 +24,7 @@ interface SelectionData {
 // Interfaccia (opzionale ma consigliata) per la struttura dei messaggi
 interface MessagePayload {
     type: string;
-    data?: any; // Può essere reso più specifico se tutti i messaggi con 'data' usano SelectionData
+    data?: unknown; // Può essere reso più specifico se tutti i messaggi con 'data' usano SelectionData
     message?: string;
 }
 
@@ -67,13 +67,11 @@ function captureTab(): Promise<string> {
  * @throws {Error} Se il salvataggio fallisce (incluso errore di quota).
  */
 async function saveData(key: string, data: SavedCaptureData): Promise<void> {
-    // Tipi per key, data e ritorno
     try {
         // Usa la funzione tipizzata da storage.util
         await storageSet({ [key]: data });
         console.log(`Web Area Saver: Dati salvati con chiave ${key}.`);
-    } catch (error: any) {
-        // Tipo 'any' o 'Error' per l'errore catturato
+    } catch (error: unknown) {
         console.error(`Web Area Saver: Errore salvataggio per chiave ${key}:`, error);
         throw error; // Rilancia l'errore originale
     }
@@ -86,7 +84,6 @@ async function saveData(key: string, data: SavedCaptureData): Promise<void> {
  * @param {string} message Il contenuto del messaggio.
  */
 function notifyContentScript(tabId: number, type: string, message: string): void {
-    // Tipi per parametri, ritorno void
     // La payload del messaggio ora corrisponde a MessagePayload (senza 'data')
     const payload: MessagePayload = { type, message };
     chrome.tabs
@@ -100,18 +97,21 @@ function notifyContentScript(tabId: number, type: string, message: string): void
 
 /**
  * Estrae un messaggio di errore user-friendly da un errore catturato.
- * @param {Error} error L'oggetto errore catturato.
+ * @param {unknown} error L'oggetto errore catturato.
  * @returns {string} Il messaggio di errore da mostrare all'utente.
  */
-function extractUserErrorMessage(error: Error | any): string {
-    // Tipo Error | any per flessibilità
+function extractUserErrorMessage(error: unknown): string {
     // Usa la funzione tipizzata da storage.util
     if (isQuotaError(error)) {
         console.warn("Web Area Saver: Errore QUOTA rilevato durante l'operazione.");
         return 'Errore: Spazio di archiviazione locale pieno.';
     }
-    // Messaggio generico per altri errori
-    return `Errore durante l'elaborazione: ${error?.message || 'Errore sconosciuto'}`;
+    // Estrai messaggio se è un Error
+    if (error instanceof Error) {
+        return `Errore durante l'elaborazione: ${error.message}`;
+    }
+    // Fallback generico
+    return `Errore durante l'elaborazione: ${String(error) || 'Errore sconosciuto'}`;
 }
 
 // --- ORCHESTRAZIONE ---
@@ -121,10 +121,9 @@ function extractUserErrorMessage(error: Error | any): string {
  * @param {chrome.runtime.MessageSender} sender Informazioni sul mittente del messaggio.
  */
 async function handleCaptureRequest(selectionData: SelectionData, sender: chrome.runtime.MessageSender): Promise<void> {
-    // Tipi per parametri, ritorno Promise<void>
     if (!sender.tab || !sender.tab.id) {
         console.error('Web Area Saver: Richiesta cattura senza ID scheda mittente valido.', sender);
-        return; // Esce se non c'è un tab valido
+        return;
     }
 
     const sourceTabId: number = sender.tab.id;
@@ -162,13 +161,9 @@ async function handleCaptureRequest(selectionData: SelectionData, sender: chrome
         const successMsg: string = 'Area catturata e salvata!';
         console.log(`Web Area Saver: ${successMsg} Chiave: ${timestampKey}`);
         notifyContentScript(sourceTabId, MSG_TYPE_SAVE_SUCCESS, successMsg);
-    } catch (error: any) {
-        // Tipo 'any' per catturare tutti gli errori possibili
-        // 6. Gestione errori e notifica al content script
+    } catch (error: unknown) {
         console.error('Web Area Saver: Errore durante il processo handleCaptureRequest:', error);
         const userErrorMessage: string = extractUserErrorMessage(error); // Estrae messaggio user-friendly
-
-        // Notifica l'errore al content script
         notifyContentScript(sourceTabId, MSG_TYPE_SAVE_ERROR, userErrorMessage);
     }
 }
@@ -176,7 +171,6 @@ async function handleCaptureRequest(selectionData: SelectionData, sender: chrome
 // --- LISTENER PRINCIPALI (onClicked e onMessage) ---
 // Listener per il click sull'icona
 chrome.action.onClicked.addListener(async (tab: chrome.tabs.Tab) => {
-    // Tipo chrome.tabs.Tab per il parametro tab
     if (tab.id) {
         const targetTabId = tab.id;
         console.log(`Click azione: Invio messaggio ACTIVATE_CAPTURE a tab ${targetTabId}`);
@@ -185,30 +179,9 @@ chrome.action.onClicked.addListener(async (tab: chrome.tabs.Tab) => {
             // inviamo un messaggio per attivare l'UI nello script già presente.
             await chrome.tabs.sendMessage(targetTabId, { type: MSG_TYPE_ACTIVATE_CAPTURE });
             console.log('Messaggio ACTIVATE_CAPTURE inviato.');
-
-            // Rimuoviamo la vecchia iniezione:
-            /*
-            await chrome.scripting.executeScript({
-                target: { tabId: targetTabId },
-                files: ['content.js'] // Non più necessario qui
-            });
-            */
-        } catch (err: any) {
-            console.error(`Errore invio messaggio ACTIVATE_CAPTURE a tab ${targetTabId}: ${err?.message || err}`);
-            // Qui potremmo provare a iniettare lo script come fallback se l'invio messaggio fallisce?
-            // Forse la pagina è stata appena aperta e lo script non è ancora caricato?
-            // Potrebbe essere necessaria una logica più robusta qui.
-            console.warn('Tentativo di fallback: iniezione script...');
-            try {
-                await chrome.scripting.executeScript({
-                    target: { tabId: targetTabId },
-                    files: ['content.js'],
-                });
-                // Dopo l'iniezione, inviamo comunque il messaggio di attivazione
-                await chrome.tabs.sendMessage(targetTabId, { type: MSG_TYPE_ACTIVATE_CAPTURE });
-            } catch (injectionError: any) {
-                console.error(`Fallito anche il fallback di iniezione: ${injectionError?.message || injectionError}`);
-            }
+        } catch (err: unknown) {
+            const errorMsg = err instanceof Error ? err.message : String(err);
+            console.error(`Errore invio messaggio ${MSG_TYPE_ACTIVATE_CAPTURE} a tab ${targetTabId}: ${errorMsg}`);
         }
     } else {
         console.error('Impossibile ottenere ID scheda per attivare cattura.');
@@ -218,36 +191,47 @@ chrome.action.onClicked.addListener(async (tab: chrome.tabs.Tab) => {
 // Listener per i messaggi dal content script
 chrome.runtime.onMessage.addListener(
     (
-        message: MessagePayload | any,
+        message: unknown,
         sender: chrome.runtime.MessageSender,
-        _sendResponse: (response?: any) => void
+        _sendResponse: (response?: unknown) => void
     ): boolean | undefined => {
-        // Controlla se il tipo è quello atteso
-        if (message?.type === MSG_TYPE_SELECTION_COMPLETE) {
-            console.log('Web Area Saver (Background): Ricevuto messaggio SELECTION_COMPLETE.');
-            // Verifica che message.data esista e abbia la struttura attesa (Type Guard o Assertion)
-            if (message.data && typeof message.data === 'object' && 'width' in message.data) {
-                // Chiamiamo handleCaptureRequest in modo asincrono ma non aspettiamo qui
-                // La notifica di successo/errore viene inviata da dentro handleCaptureRequest
-                handleCaptureRequest(message.data as SelectionData, sender);
-                // Non è necessario restituire true perché non usiamo sendResponse qui.
-                // Restituire false o undefined indica che il canale del messaggio può essere chiuso.
-            } else {
-                console.error(
-                    "Web Area Saver (Background): Ricevuto SELECTION_COMPLETE ma i dati ('message.data') sono mancanti o non validi.",
-                    message
-                );
-                // Potresti voler notificare il content script di questo errore?
-                if (sender.tab?.id) {
-                    notifyContentScript(
-                        sender.tab.id,
-                        MSG_TYPE_SAVE_ERROR,
-                        'Errore interno: Dati di selezione mancanti o corrotti.'
-                    );
+        // Type guard per verificare struttura messaggio
+        if (typeof message === 'object' && message !== null && 'type' in message && typeof message.type === 'string') {
+            if (message.type === MSG_TYPE_SELECTION_COMPLETE) {
+                console.log('Web Area Saver (Background): Ricevuto SELECTION_COMPLETE.');
+                // Type guard più specifico per message.data
+                if (
+                    'data' in message &&
+                    typeof message.data === 'object' &&
+                    message.data !== null &&
+                    'top' in message.data &&
+                    typeof message.data.top === 'number' && // Aggiungi controlli per tutte le proprietà
+                    'left' in message.data &&
+                    typeof message.data.left === 'number' &&
+                    'width' in message.data &&
+                    typeof message.data.width === 'number' &&
+                    'height' in message.data &&
+                    typeof message.data.height === 'number' &&
+                    'dpr' in message.data &&
+                    typeof message.data.dpr === 'number'
+                ) {
+                    // Ora è sicuro fare l'assertion perché abbiamo controllato
+                    handleCaptureRequest(message.data as SelectionData, sender);
+                } else {
+                    console.error('BG: Ricevuto SELECTION_COMPLETE ma data è mancante o non valido.', message);
+                    if (sender.tab?.id) {
+                        notifyContentScript(
+                            sender.tab.id,
+                            MSG_TYPE_SAVE_ERROR,
+                            'Errore interno: Dati selezione mancanti/corrotti.'
+                        );
+                    }
                 }
+            } else {
+                console.log('BG: Ricevuto messaggio con tipo non gestito:', message.type);
             }
         } else {
-            console.log('Web Area Saver (Background): Ricevuto messaggio non gestito o senza tipo:', message);
+            console.log('BG: Ricevuto messaggio non valido o senza tipo:', message);
         }
 
         // Restituisce false per indicare che non invieremo una risposta asincrona tramite sendResponse.
