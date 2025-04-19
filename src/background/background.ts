@@ -220,7 +220,7 @@ chrome.runtime.onMessage.addListener(
     (
         message: MessagePayload | any,
         sender: chrome.runtime.MessageSender,
-        sendResponse: (response?: any) => void
+        _sendResponse: (response?: any) => void
     ): boolean | undefined => {
         // Controlla se il tipo è quello atteso
         if (message?.type === MSG_TYPE_SELECTION_COMPLETE) {

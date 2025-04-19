@@ -78,8 +78,8 @@ interface SelectionPayload extends Rect {
     // --- Listener Messaggi Background ---
     const handleBackgroundMessages = (
         message: BackgroundMessage | any,
-        sender: chrome.runtime.MessageSender,
-        sendResponse: (response?: any) => void
+        _sender: chrome.runtime.MessageSender,
+        _sendResponse: (response?: any) => void
     ): boolean | undefined => {
         log('Messaggio ricevuto dal background:', message);
 
@@ -448,7 +448,7 @@ interface SelectionPayload extends Rect {
     };
 
     // Mouse Up per terminare disegno (tipo evento MouseEvent)
-    const onMouseUp = (e: MouseEvent): void => {
+    const onMouseUp = (_e: MouseEvent): void => {
         if (!appState.isDrawing || appState.currentState !== 'drawing') return;
 
         appState.isDrawing = false; // Fine disegno

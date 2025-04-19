@@ -2,10 +2,6 @@
 import globals from 'globals';
 import tsPlugin from '@typescript-eslint/eslint-plugin';
 import tsParser from '@typescript-eslint/parser';
-// Carica la configurazione raccomandata di eslint-plugin-prettier
-// Questo gestisce l'integrazione con Prettier (disabilita regole conflittanti)
-// Assicura di aver installato: npm install -D eslint-plugin-prettier
-import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended';
 
 export default [
     // 1. Ignora File Globali
@@ -60,9 +56,4 @@ export default [
             '@typescript-eslint/no-explicit-any': 'warn', // Opzione 1: Segnala 'any' come warning (meno bloccante)
         },
     },
-
-    // 3. Configurazione Prettier (DEVE ESSERE L'ULTIMA DELL'ARRAY)
-    // Carica la configurazione raccomandata da eslint-plugin-prettier
-    // che include eslint-config-prettier per disabilitare regole conflittanti.
-    eslintPluginPrettierRecommended,
 ];
