@@ -12,7 +12,10 @@ dist/
 *.log*
 
 # IDE/Editor specific
-.vscode/
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+
 .idea/
 
 # OS specific

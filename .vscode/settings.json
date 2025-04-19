@@ -1,0 +1,32 @@
+{
+    // Formatta automaticamente il file al salvataggio
+    "editor.formatOnSave": true,
+    // Imposta Prettier come formattatore predefinito per tutti i file
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    // Puoi specificare Prettier anche per lingue specifiche (ridondante se default è già impostato, ma esplicito)
+    "[typescript]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[scss]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[json]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[html]": { // Aggiunto HTML
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[css]": { // Aggiunto CSS
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    // Abilita la validazione di ESLint per i file TypeScript
+    "eslint.validate": [
+        "typescript"
+    ],
+    // Esegue azioni al salvataggio
+    "editor.codeActionsOnSave": {
+        // Esegue l'auto-fix di ESLint al salvataggio
+        // "explicit" è preferito a "true" nelle versioni recenti dell'estensione ESLint
+        "source.fixAll.eslint": "explicit"
+    }
+}

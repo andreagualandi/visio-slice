@@ -1,0 +1,6 @@
+{
+  "recommendations": [
+    "dbaeumer.vscode-eslint",   // Necessaria per integrazione ESLint (errori, fix on save)
+    "esbenp.prettier-vscode"  // Necessaria per integrazione Prettier (format on save)
+  ]
+}
