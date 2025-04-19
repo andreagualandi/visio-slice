@@ -5,7 +5,7 @@ import {
     MSG_TYPE_SAVE_SUCCESS,
     MSG_TYPE_SAVE_ERROR,
     MSG_TYPE_CAPTURE_ERROR,
-    MSG_TYPE_SELECTION_COMPLETE // Usato per inviare il messaggio
+    MSG_TYPE_SELECTION_COMPLETE, // Usato per inviare il messaggio
 } from '../shared/constants';
 
 // --- Definizione Tipi e Interfacce ---
@@ -65,14 +65,13 @@ interface BackgroundMessage {
 }
 
 // Interfaccia per i dati inviati al background script
-interface SelectionPayload extends Rect { // Estende Rect
+interface SelectionPayload extends Rect {
+    // Estende Rect
     dpr: number; // Aggiunge Device Pixel Ratio
 }
 
-
 // --- Inizio IIFE ---
 (function () {
-
     // Funzione di logging con tipo per rest parameters
     const log = (...args: any[]): void => console.log('[WebAreaSaver]', ...args);
 
@@ -122,7 +121,7 @@ interface SelectionPayload extends Rect { // Estende Rect
     function activateCaptureUI() {
         // Controllo aggiuntivo per evitare attivazioni multiple se serve
         if (appState.isActive) {
-            log("UI già attiva.");
+            log('UI già attiva.');
             return;
         }
         log('Attivazione interfaccia di cattura...');
@@ -147,7 +146,7 @@ interface SelectionPayload extends Rect { // Estende Rect
             handle: null,
             startX: 0,
             startY: 0,
-            initialRect: null
+            initialRect: null,
         },
         originalCursor: document.body.style.cursor || 'default', // Salva cursore originale
         elements: {
@@ -157,8 +156,8 @@ interface SelectionPayload extends Rect { // Estende Rect
             style: null,
             border: null,
             saveBtn: null,
-            handles: [] // Inizializza come array vuoto
-        }
+            handles: [], // Inizializza come array vuoto
+        },
     };
 
     // --- Funzioni Helper Tipizzate ---
@@ -184,7 +183,6 @@ interface SelectionPayload extends Rect { // Estende Rect
             }
         } as T; // Type assertion per mantenere il tipo originale della funzione
     };
-
 
     // --- CSS e UI ---
 
@@ -248,7 +246,8 @@ interface SelectionPayload extends Rect { // Estende Rect
         // Rimuovi listener specifici con tipi evento corretti
         appState.elements.blocker?.removeEventListener('mousedown', onMouseDown);
         appState.elements.blocker?.removeEventListener('mousedown', onInteractionStart);
-        appState.elements.handles.forEach((handle: HTMLDivElement) => { // Tipo per handle nell'array
+        appState.elements.handles.forEach((handle: HTMLDivElement) => {
+            // Tipo per handle nell'array
             handle.removeEventListener('mousedown', onInteractionStart);
         });
         window.removeEventListener('keydown', onKeyDown);
@@ -284,7 +283,8 @@ interface SelectionPayload extends Rect { // Estende Rect
     // Handler tastiera (tipo evento: KeyboardEvent)
     const onKeyDown = (e: KeyboardEvent): void => {
         if (e.key === 'Escape') {
-            if (appState.interaction.type) { // Se sto interagendo (move/resize)
+            if (appState.interaction.type) {
+                // Se sto interagendo (move/resize)
                 log('Interazione annullata con ESC');
                 // Interrompi interazione corrente
                 appState.interaction.type = null;
@@ -298,7 +298,8 @@ interface SelectionPayload extends Rect { // Estende Rect
                 document.body.style.cursor = 'default'; // Ripristina cursore body
                 if (appState.elements.blocker) appState.elements.blocker.style.cursor = 'crosshair'; // Cursore blocker
                 updateSelectionUI(); // Ridisegna UI
-            } else { // Altrimenti (disegnando o selezionato ma fermo), annulla tutto
+            } else {
+                // Altrimenti (disegnando o selezionato ma fermo), annulla tutto
                 log('Operazione annullata con ESC.');
                 cleanup();
             }
@@ -380,7 +381,7 @@ interface SelectionPayload extends Rect { // Estende Rect
         // Nascondi elementi UI non necessari durante il disegno
         if (appState.elements.border) appState.elements.border.style.display = 'none';
         if (appState.elements.saveBtn) appState.elements.saveBtn.style.display = 'none';
-        appState.elements.handles.forEach(h => h.style.display = 'none'); // Nascondi handle esistenti
+        appState.elements.handles.forEach((h) => (h.style.display = 'none')); // Nascondi handle esistenti
         setClipPath(appState.elements.overlay, 'none'); // Rimuovi eventuale clip-path precedente
 
         // Aggiungi listener globali per movimento e rilascio
@@ -493,7 +494,8 @@ interface SelectionPayload extends Rect { // Estende Rect
         if (!rect) return; // Necessario rettangolo
 
         let btn: HTMLButtonElement | null = appState.elements.saveBtn;
-        if (!btn) { // Se non esiste, crealo
+        if (!btn) {
+            // Se non esiste, crealo
             btn = document.createElement('button');
             btn.className = 'web-area-saver-save';
             btn.title = 'Salva cattura (\u2713)'; // Checkmark nel titolo
@@ -521,7 +523,9 @@ interface SelectionPayload extends Rect { // Estende Rect
         log('Nascondo UI prima della cattura...');
 
         // Nascondi elementi UI temporaneamente
-        appState.elements.handles.forEach(h => { if (h) h.style.display = 'none'; });
+        appState.elements.handles.forEach((h) => {
+            if (h) h.style.display = 'none';
+        });
         if (appState.elements.saveBtn) appState.elements.saveBtn.style.display = 'none';
         if (appState.elements.border) appState.elements.border.style.display = 'none';
 
@@ -531,7 +535,7 @@ interface SelectionPayload extends Rect { // Estende Rect
             left: Math.round(rect.left),
             width: Math.round(rect.width),
             height: Math.round(rect.height),
-            dpr: window.devicePixelRatio || 1 // Includi DPR
+            dpr: window.devicePixelRatio || 1, // Includi DPR
         };
 
         const delayMs: number = 100; // Breve ritardo per permettere all'UI di nascondersi
@@ -541,18 +545,16 @@ interface SelectionPayload extends Rect { // Estende Rect
             log('Invio dati al background:', dataToSend);
             try {
                 // Invia messaggio al background script usando la costante e i dati tipizzati
-                chrome.runtime.sendMessage(
-                    { type: MSG_TYPE_SELECTION_COMPLETE, data: dataToSend },
-                    (response?: any) => { // Callback opzionale
-                        if (chrome.runtime.lastError) {
-                            log('Errore invio messaggio:', chrome.runtime.lastError.message);
-                            // Potrebbe essere utile mostrare un toast qui se l'invio fallisce subito
-                            // showToast(`Errore comunicazione: ${chrome.runtime.lastError.message}`, true);
-                        } else {
-                            log('Messaggio SELECTION_COMPLETE inviato con successo.', response);
-                        }
+                chrome.runtime.sendMessage({ type: MSG_TYPE_SELECTION_COMPLETE, data: dataToSend }, (response?: any) => {
+                    // Callback opzionale
+                    if (chrome.runtime.lastError) {
+                        log('Errore invio messaggio:', chrome.runtime.lastError.message);
+                        // Potrebbe essere utile mostrare un toast qui se l'invio fallisce subito
+                        // showToast(`Errore comunicazione: ${chrome.runtime.lastError.message}`, true);
+                    } else {
+                        log('Messaggio SELECTION_COMPLETE inviato con successo.', response);
                     }
-                );
+                });
             } catch (error: any) {
                 log('Eccezione durante sendMessage:', error);
                 showToast(`Errore imprevisto estensione: ${error.message}`, true);
@@ -562,7 +564,6 @@ interface SelectionPayload extends Rect { // Estende Rect
             }
         }, delayMs);
     };
-
 
     // --- UI Handle Resize ---
 
@@ -590,7 +591,7 @@ interface SelectionPayload extends Rect { // Estende Rect
             'top-left': { top: rect.top - handleSizeOffset, left: rect.left - handleSizeOffset, cursor: 'nwse-resize' },
             'top-right': { top: rect.top - handleSizeOffset, left: rect.left + rect.width - handleSizeOffset, cursor: 'nesw-resize' },
             'bottom-left': { top: rect.top + rect.height - handleSizeOffset, left: rect.left - handleSizeOffset, cursor: 'nesw-resize' },
-            'bottom-right': { top: rect.top + rect.height - handleSizeOffset, left: rect.left + rect.width - handleSizeOffset, cursor: 'nwse-resize' }
+            'bottom-right': { top: rect.top + rect.height - handleSizeOffset, left: rect.left + rect.width - handleSizeOffset, cursor: 'nwse-resize' },
             // Aggiungere altri handle (es. laterali) qui se necessario
         };
 
@@ -642,7 +643,6 @@ interface SelectionPayload extends Rect { // Estende Rect
         createOrUpdateSaveButton();
     };
 
-
     // --- Logica Interazioni (Move/Resize post-selezione) ---
 
     // Mouse Down su Blocker (per move) o Handle (per resize) (tipo evento MouseEvent)
@@ -667,16 +667,21 @@ interface SelectionPayload extends Rect { // Estende Rect
             log(`Inizio resize (handle: ${handleType})`);
         }
         // Verifica se il target è il blocker DENTRO l'area selezionata (per move)
-        else if (target === appState.elements.blocker && rect &&
-            e.clientX >= rect.left && e.clientX <= rect.left + rect.width &&
-            e.clientY >= rect.top && e.clientY <= rect.top + rect.height) {
+        else if (
+            target === appState.elements.blocker &&
+            rect &&
+            e.clientX >= rect.left &&
+            e.clientX <= rect.left + rect.width &&
+            e.clientY >= rect.top &&
+            e.clientY <= rect.top + rect.height
+        ) {
             interactionType = 'move';
             handleType = null;
             document.body.style.cursor = 'move'; // Imposta cursore move
-            log("Inizio spostamento.");
+            log('Inizio spostamento.');
         } else {
             // Click fuori dall'area attiva (su overlay, bottone cancel, etc.) -> nessuna interazione
-            log("Click fuori area attiva, nessuna interazione avviata.");
+            log('Click fuori area attiva, nessuna interazione avviata.');
             return;
         }
 
@@ -760,7 +765,7 @@ interface SelectionPayload extends Rect { // Estende Rect
             top: Math.round(newRect.top),
             left: Math.round(newRect.left),
             width: Math.round(newRect.width),
-            height: Math.round(newRect.height)
+            height: Math.round(newRect.height),
         };
 
         // Aggiorna l'UI per riflettere le modifiche
@@ -795,7 +800,6 @@ interface SelectionPayload extends Rect { // Estende Rect
         createOrUpdateHandles(); // Assicura che gli handle siano posizionati correttamente
     };
 
-
     // --- Inizializzazione Finale ---
 
     // Definisci limite throttle
@@ -813,5 +817,4 @@ interface SelectionPayload extends Rect { // Estende Rect
     // log('Interfaccia inizializzata. Stato: idle.'); // Rimosso
 
     log('Content script caricato e in ascolto.'); // Log generico al caricamento
-
 })(); // --- Fine IIFE ---

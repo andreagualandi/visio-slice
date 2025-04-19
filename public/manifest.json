@@ -3,12 +3,7 @@
     "name": "Visio Slice",
     "version": "0.1.0",
     "description": "Cut web slices",
-    "permissions": [
-        "storage",
-        "activeTab",
-        "scripting",
-        "unlimitedStorage"
-    ],
+    "permissions": ["storage", "activeTab", "scripting", "unlimitedStorage"],
     "background": {
         "service_worker": "src/background/background.ts",
         "type": "module"
@@ -24,12 +19,8 @@
     },
     "content_scripts": [
         {
-            "matches": [
-                "<all_urls>"
-            ],
-            "js": [
-                "src/content/content.ts"
-            ],
+            "matches": ["<all_urls>"],
+            "js": ["src/content/content.ts"],
             "run_at": "document_idle"
         }
     ],

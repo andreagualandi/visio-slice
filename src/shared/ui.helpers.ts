@@ -6,15 +6,11 @@
  * @param message Optional: Messaggio specifico da mostrare nella modale (default: null).
  * @param messageElementId Optional: ID dell'elemento <p> (o simile) dove mostrare il messaggio (default: 'modalMessage').
  */
-export function showModal(
-    modalId: string = 'deleteConfirmationModal',
-    message: string | null = null,
-    messageElementId: string = 'modalMessage'
-): void {
+export function showModal(modalId: string = 'deleteConfirmationModal', message: string | null = null, messageElementId: string = 'modalMessage'): void {
     console.log(`showModal called: modalId=<span class="math-inline">\{modalId\}, message\=</span>{message}, messageElementId=${messageElementId}`);
     // Trova l'elemento overlay della modale
     const modalOverlay: HTMLElement | null = document.getElementById(modalId);
-    console.log("Modal overlay found in DOM:", modalOverlay);
+    console.log('Modal overlay found in DOM:', modalOverlay);
     if (modalOverlay) {
         // Se è stato fornito un messaggio e un ID per l'elemento del messaggio...
         if (message && messageElementId) {
@@ -29,7 +25,7 @@ export function showModal(
         }
         // Rendi visibile la modale aggiungendo la classe 'visible'
         modalOverlay.classList.add('visible');
-        console.log("Modal should be visible now.");
+        console.log('Modal should be visible now.');
     } else {
         console.error(`Elemento modale con ID '${modalId}' non trovato.`);
     }
@@ -72,7 +68,7 @@ export function updateWorkspaceMessageVisibility(
         // Conta gli elementi nel contenitore che corrispondono al selettore specificato
         const itemCount: number = containerElement.querySelectorAll(itemSelector).length;
         // Mostra il messaggio se il conteggio è 0, altrimenti nascondilo
-        messageElement.style.display = (itemCount === 0) ? 'block' : 'none';
+        messageElement.style.display = itemCount === 0 ? 'block' : 'none';
     } else {
         if (!containerElement) console.error(`Elemento contenitore '${containerId}' non trovato.`);
         if (!messageElement) console.error(`Elemento messaggio '${messageElementId}' non trovato.`);

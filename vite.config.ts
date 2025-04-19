@@ -10,7 +10,6 @@ import manifest from './public/manifest.json';
 // import manifest from './manifest.json';
 // import manifest from './src/manifest.json';
 
-
 export default defineConfig({
     // Non serve più publicDir se il manifest è specificato direttamente
     // publicDir: 'public',

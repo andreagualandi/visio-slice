@@ -12,7 +12,7 @@ import { showModal, hideModal, updateWorkspaceMessageVisibility } from '../share
 // --- Interfaccia per i dati recuperati dallo storage ---
 interface StoredItemData {
     thumb: string; // Data URL miniatura
-    full: string;  // Data URL immagine completa
+    full: string; // Data URL immagine completa
 }
 
 // --- Riferimenti Elementi DOM Principali (Tipizzati) ---
@@ -96,20 +96,20 @@ function renderWorkspaceImage(key: string, itemData: StoredItemData): HTMLDivEle
  */
 async function displayStorageInfo(): Promise<void> {
     if (!chrome?.storage?.local?.getBytesInUse) {
-        console.warn("API chrome.storage.local.getBytesInUse() non disponibile.");
-        if (storageInfoElement) storageInfoElement.textContent = "Info storage non disponibili.";
+        console.warn('API chrome.storage.local.getBytesInUse() non disponibile.');
+        if (storageInfoElement) storageInfoElement.textContent = 'Info storage non disponibili.';
         return;
     }
     if (!storageInfoElement) {
-        console.warn("Elemento DOM #storage-info non trovato.");
+        console.warn('Elemento DOM #storage-info non trovato.');
         return;
     }
     try {
         const usageInBytes: number = await chrome.storage.local.getBytesInUse();
         storageInfoElement.textContent = `Storage: ${formatBytes(usageInBytes)} usati`;
     } catch (error: any) {
-        console.error("Errore durante il calcolo dello spazio usato:", error);
-        if (storageInfoElement) storageInfoElement.textContent = "Errore nel caricare info storage.";
+        console.error('Errore durante il calcolo dello spazio usato:', error);
+        if (storageInfoElement) storageInfoElement.textContent = 'Errore nel caricare info storage.';
     }
 }
 
@@ -129,7 +129,7 @@ function addImageToWorkspace(key: string): void {
             `.${styles['workspace-image-container']}`
         );
     } else {
-        if (!workspaceContentElement) console.error("Elemento workspace-content non trovato.");
+        if (!workspaceContentElement) console.error('Elemento workspace-content non trovato.');
         if (!allFetchedItems[key]?.full) console.error(`Dati immagine completa non trovati per ${key}`);
         alert(`Errore: Impossibile caricare l'immagine ${key}.`);
     }
@@ -140,7 +140,7 @@ function addImageToWorkspace(key: string): void {
  */
 async function initializeLayoutSlider(): Promise<void> {
     if (!percentSlider || !percentDisplay || !workspaceContentElement) {
-        console.warn("Elementi slider layout non trovati.");
+        console.warn('Elementi slider layout non trovati.');
         return;
     }
     const wsContent = workspaceContentElement;
@@ -156,7 +156,7 @@ async function initializeLayoutSlider(): Promise<void> {
             await storageSet({ [STORAGE_KEY_LAYOUT_PREFERENCE]: parseInt(percentValue, 10) });
             // console.log(`Preferenza layout salvata: ${percentValue}%`);
         } catch (error: any) {
-            console.error("Errore salvataggio preferenza layout:", error);
+            console.error('Errore salvataggio preferenza layout:', error);
         }
     };
 
@@ -167,7 +167,7 @@ async function initializeLayoutSlider(): Promise<void> {
         percentSlider.value = initialValue;
         applyMinPercent(initialValue);
     } catch (error: any) {
-        console.error("Errore caricamento preferenza layout:", error);
+        console.error('Errore caricamento preferenza layout:', error);
         applyMinPercent(percentSlider.value);
     }
 
@@ -187,7 +187,7 @@ async function initializeLayoutSlider(): Promise<void> {
  */
 async function loadInitialData(): Promise<void> {
     if (!sidebarListElement) {
-        console.error("Elemento #sidebar-content non trovato. Impossibile caricare dati.");
+        console.error('Elemento #sidebar-content non trovato. Impossibile caricare dati.');
         return;
     }
     const sidebarList = sidebarListElement;
@@ -195,21 +195,21 @@ async function loadInitialData(): Promise<void> {
     try {
         const items: { [key: string]: any } = await storageGet(null);
         allFetchedItems = Object.entries(items)
-            .filter(([key, value]) =>
-                key.startsWith(STORAGE_KEY_PREFIX_CAPTURE) &&
-                typeof value === 'object' && value !== null &&
-                'thumb' in value && 'full' in value
+            .filter(
+                ([key, value]) =>
+                    key.startsWith(STORAGE_KEY_PREFIX_CAPTURE) && typeof value === 'object' && value !== null && 'thumb' in value && 'full' in value
             )
-            .reduce((acc, [key, value]) => {
-                acc[key] = value as StoredItemData;
-                return acc;
-            }, {} as { [key: string]: StoredItemData });
-
-        const captureKeys: string[] = Object.keys(allFetchedItems)
-            .sort((a, b) =>
-                (parseInt(b.substring(STORAGE_KEY_PREFIX_CAPTURE.length), 10) || 0) -
-                (parseInt(a.substring(STORAGE_KEY_PREFIX_CAPTURE.length), 10) || 0)
+            .reduce(
+                (acc, [key, value]) => {
+                    acc[key] = value as StoredItemData;
+                    return acc;
+                },
+                {} as { [key: string]: StoredItemData }
             );
+
+        const captureKeys: string[] = Object.keys(allFetchedItems).sort(
+            (a, b) => (parseInt(b.substring(STORAGE_KEY_PREFIX_CAPTURE.length), 10) || 0) - (parseInt(a.substring(STORAGE_KEY_PREFIX_CAPTURE.length), 10) || 0)
+        );
 
         sidebarLoadingElement?.remove();
         sidebarList.innerHTML = '';
@@ -218,10 +218,10 @@ async function loadInitialData(): Promise<void> {
             const messageP = document.createElement('p');
             // Usa notazione a parentesi quadre
             messageP.className = styles['sidebar-message'];
-            messageP.textContent = "Nessuna cattura salvata.";
+            messageP.textContent = 'Nessuna cattura salvata.';
             sidebarList.appendChild(messageP);
         } else {
-            captureKeys.forEach(key => {
+            captureKeys.forEach((key) => {
                 const itemData = allFetchedItems[key];
                 const sidebarItemElement = renderSidebarItem(key, itemData);
                 sidebarList.appendChild(sidebarItemElement);
@@ -236,16 +236,16 @@ async function loadInitialData(): Promise<void> {
         setupEventListeners();
         console.log(`Caricate ${captureKeys.length} catture.`);
     } catch (error: any) {
-        console.error("Errore grave durante caricamento dati iniziali:", error);
+        console.error('Errore grave durante caricamento dati iniziali:', error);
         sidebarLoadingElement?.remove();
         sidebarList.innerHTML = '';
         const errorP = document.createElement('p');
         // Usa notazione a parentesi quadre
         errorP.className = styles['sidebar-message'];
         errorP.style.color = 'red';
-        errorP.textContent = "Errore caricamento catture.";
+        errorP.textContent = 'Errore caricamento catture.';
         sidebarList.appendChild(errorP);
-        if (workspaceMessageElement) workspaceMessageElement.textContent = "Impossibile caricare le catture salvate.";
+        if (workspaceMessageElement) workspaceMessageElement.textContent = 'Impossibile caricare le catture salvate.';
     }
 }
 
@@ -273,7 +273,8 @@ function handleSidebarItemClick(itemId: string): void {
     } else {
         // console.log(`Immagine ${itemId} non presente. Aggiungo.`);
         addImageToWorkspace(itemId);
-        if (sidebarItem instanceof HTMLElement) { // Verifica tipo prima di accedere a dataset
+        if (sidebarItem instanceof HTMLElement) {
+            // Verifica tipo prima di accedere a dataset
             sidebarItem.dataset.selected = 'true';
         }
     }
@@ -283,15 +284,10 @@ function handleSidebarItemClick(itemId: string): void {
  * Gestisce il click sul bottone elimina di un item nella sidebar.
  */
 function handleSidebarItemDeleteClick(itemId: string): void {
-
     itemToDeleteId = itemId;
     const itemTimestamp: string = formatTimestamp(itemId);
 
-    showModal(
-        'deleteConfirmationModal',
-        `Sei sicuro di voler eliminare la cattura del ${itemTimestamp}?`,
-        'modalMessage'
-    );
+    showModal('deleteConfirmationModal', `Sei sicuro di voler eliminare la cattura del ${itemTimestamp}?`, 'modalMessage');
 }
 
 /**
@@ -343,7 +339,7 @@ async function handleModalConfirm(): Promise<void> {
             const messageP = document.createElement('p');
             // Usa notazione a parentesi quadre
             messageP.className = styles['sidebar-message'];
-            messageP.textContent = "Nessuna cattura salvata.";
+            messageP.textContent = 'Nessuna cattura salvata.';
             sidebarListElement.appendChild(messageP);
         }
         updateWorkspaceMessageVisibility(
@@ -353,7 +349,6 @@ async function handleModalConfirm(): Promise<void> {
             `.${styles['workspace-image-container']}`
         );
         await displayStorageInfo();
-
     } catch (error: any) {
         console.error(`Errore eliminazione ${idToDelete}:`, error);
         alert(`Errore durante l'eliminazione: ${error.message}`);
@@ -374,26 +369,24 @@ function setupEventListeners(): void {
     // Listener Sidebar (Delegazione Eventi)
     sidebarListElement?.addEventListener('click', (event: MouseEvent) => {
         const target = event.target as Element;
-        console.log("Sidebar click target:", target);
+        console.log('Sidebar click target:', target);
         // Usa selettore di classe modulo per trovare il bottone
         const deleteButtonTarget = target.closest(`.${styles['delete-btn']}`);
-        console.log("Delete button target found:", deleteButtonTarget);
+        console.log('Delete button target found:', deleteButtonTarget);
         // Usa data attribute per trovare l'item (più robusto)
         const sidebarItemTarget = target.closest<HTMLElement>(`[data-id^="${STORAGE_KEY_PREFIX_CAPTURE}"]`); // Trova l'elemento con data-id che inizia con il prefisso
-        console.log("Sidebar item target found:", sidebarItemTarget);
-        console.log("Sidebar item data-id:", sidebarItemTarget?.dataset.id);
+        console.log('Sidebar item target found:', sidebarItemTarget);
+        console.log('Sidebar item data-id:', sidebarItemTarget?.dataset.id);
         if (deleteButtonTarget && sidebarItemTarget?.dataset.id) {
-            console.log("DELETE BUTTON LOGIC TRIGGERED for item:", sidebarItemTarget.dataset.id);
+            console.log('DELETE BUTTON LOGIC TRIGGERED for item:', sidebarItemTarget.dataset.id);
             event.stopPropagation();
             handleSidebarItemDeleteClick(sidebarItemTarget.dataset.id);
-        }
-        else if (sidebarItemTarget?.dataset.id) {
-            console.log("SIDEBAR ITEM CLICK LOGIC TRIGGERED for item:", sidebarItemTarget.dataset.id);
+        } else if (sidebarItemTarget?.dataset.id) {
+            console.log('SIDEBAR ITEM CLICK LOGIC TRIGGERED for item:', sidebarItemTarget.dataset.id);
             handleSidebarItemClick(sidebarItemTarget.dataset.id);
-        }
-        else {
+        } else {
             // Log 7: Non abbiamo riconosciuto né un bottone né un item cliccabile
-            console.log("Click inside sidebar list but not on a recognized target.");
+            console.log('Click inside sidebar list but not on a recognized target.');
         }
     });
 
@@ -405,7 +398,8 @@ function setupEventListeners(): void {
         if (closeButton) {
             // Usa selettore di classe modulo per trovare il container
             const container = closeButton.closest<HTMLElement>(`.${styles['workspace-image-container']}`);
-            if (container?.dataset.id) { // Verifica che container esista e abbia dataset.id
+            if (container?.dataset.id) {
+                // Verifica che container esista e abbia dataset.id
                 handleWorkspaceItemCloseClick(container.dataset.id);
             }
         }
@@ -427,7 +421,7 @@ function setupEventListeners(): void {
 
 // --- Inizializzazione all'Avvio ---
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("Web Area Saver (New Tab): DOM Caricato. Applicazione classi modulo statiche...");
+    console.log('Web Area Saver (New Tab): DOM Caricato. Applicazione classi modulo statiche...');
 
     // Seleziona e applica classi modulo agli elementi statici dell'HTML
     const appContainer = document.querySelector('.app-container');
@@ -478,9 +472,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- Continua con l'inizializzazione logica ---
-    console.log("Web Area Saver (New Tab): Inizializzazione logica...");
+    console.log('Web Area Saver (New Tab): Inizializzazione logica...');
     if (!sidebarListElement || !workspaceContentElement || !workspaceMessageElement) {
-        console.error("Elementi UI principali mancanti. Impossibile inizializzare.");
+        console.error('Elementi UI principali mancanti. Impossibile inizializzare.');
         document.body.innerHTML = '<p style="color: red; padding: 20px;">Errore: Elementi UI principali mancanti.</p>';
         return;
     }

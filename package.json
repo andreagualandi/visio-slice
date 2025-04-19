@@ -1,31 +1,31 @@
 {
-  "name": "visioslice",
-  "version": "1.0.0",
-  "main": "index.js",
-  "type": "module",
-  "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "lint": "eslint \"src/**/*.ts\"",
-    "lint:fix": "eslint \"src/**/*.ts\" --fix",
-    "format:check": "prettier --check \"src/**/*.{ts,scss,css,html,json}\" \"public/**/*.json\" \"*.{js,ts,json,md}\"",
-    "format:write": "prettier --write \"src/**/*.{ts,scss,css,html,json}\" \"public/**/*.json\" \"*.{js,ts,json,md}\""
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": "",
-  "devDependencies": {
-    "@crxjs/vite-plugin": "^2.0.0-beta.32",
-    "@types/chrome": "^0.0.315",
-    "@types/node": "^22.14.1",
-    "@typescript-eslint/eslint-plugin": "^8.30.1",
-    "@typescript-eslint/parser": "^8.30.1",
-    "eslint": "^9.25.0",
-    "eslint-config-prettier": "^10.1.2",
-    "prettier": "^3.5.3",
-    "sass": "^1.86.3",
-    "typescript": "^5.8.3",
-    "vite": "^6.3.2"
-  }
+    "name": "visioslice",
+    "version": "1.0.0",
+    "main": "index.js",
+    "type": "module",
+    "scripts": {
+        "dev": "vite",
+        "build": "vite build",
+        "lint": "eslint \"src/**/*.ts\"",
+        "lint:fix": "eslint \"src/**/*.ts\" --fix",
+        "format:check": "prettier --check \"src/**/*.{ts,scss,css,html,json}\" \"public/**/*.json\" \"*.{js,ts,json,md}\"",
+        "format:write": "prettier --write \"src/**/*.{ts,scss,css,html,json}\" \"public/**/*.json\" \"*.{js,ts,json,md}\""
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "description": "",
+    "devDependencies": {
+        "@crxjs/vite-plugin": "^2.0.0-beta.32",
+        "@types/chrome": "^0.0.315",
+        "@types/node": "^22.14.1",
+        "@typescript-eslint/eslint-plugin": "^8.30.1",
+        "@typescript-eslint/parser": "^8.30.1",
+        "eslint": "^9.25.0",
+        "eslint-config-prettier": "^10.1.2",
+        "prettier": "^3.5.3",
+        "sass": "^1.86.3",
+        "typescript": "^5.8.3",
+        "vite": "^6.3.2"
+    }
 }

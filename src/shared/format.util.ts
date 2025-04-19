@@ -26,12 +26,15 @@ export function formatTimestamp(key: string): string {
 
         // Specifica il tipo per l'oggetto delle opzioni
         const opts: Intl.DateTimeFormatOptions = {
-            day: '2-digit', month: 'short', year: 'numeric',
-            hour: '2-digit', minute: '2-digit', hour12: false // Usa formato 24h per coerenza
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false, // Usa formato 24h per coerenza
         };
 
         return new Intl.DateTimeFormat('it-IT', opts).format(dt);
-
     } catch (e) {
         console.error(`Errore formattazione timestamp per key ${key}:`, e);
         return key; // Fallback alla chiave originale

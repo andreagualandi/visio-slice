@@ -10,7 +10,7 @@
     --muted-text: #6c757d;
     --border-color: #ced4da;
     --border-color-light: #dee2e6;
-    --accent-color: #0064FF;
+    --accent-color: #0064ff;
     --success-color: #28a745;
     --danger-color: #dc3545;
     --box-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
@@ -21,7 +21,7 @@ html,
 body {
     height: 100%;
     margin: 0;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     background-color: var(--primary-bg);
     color: var(--primary-text);
     overflow: hidden;
@@ -83,10 +83,13 @@ body {
     margin-bottom: 12px;
     padding: 10px;
     cursor: pointer;
-    transition: background-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out, border-color 0.2s ease-in-out;
+    transition:
+        background-color 0.2s ease-in-out,
+        box-shadow 0.2s ease-in-out,
+        border-color 0.2s ease-in-out;
     box-shadow: var(--box-shadow-sm);
 
-    &[data-selected="true"] {
+    &[data-selected='true'] {
         background-color: #e7f1ff; // Stile selezionato
         border-color: #a6cfff; // Stile selezionato
         box-shadow: var(--box-shadow-md); // Stile selezionato
@@ -141,7 +144,9 @@ body {
     font-size: 16px;
     line-height: 1;
     padding: 0;
-    transition: background-color 0.2s ease, transform 0.1s ease;
+    transition:
+        background-color 0.2s ease,
+        transform 0.1s ease;
     z-index: 2;
 }
 
@@ -258,7 +263,9 @@ body {
     line-height: 1;
     padding: 0;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-    transition: background-color 0.2s ease, transform 0.1s ease;
+    transition:
+        background-color 0.2s ease,
+        transform 0.1s ease;
 }
 
 .close-btn:hover {
@@ -268,7 +275,7 @@ body {
 }
 
 .close-btn:active {
-    transform: scale(1.0);
+    transform: scale(1);
 }
 
 /* --- Stili per la Modale di Conferma --- */
@@ -285,7 +292,6 @@ body {
     z-index: 1000;
     opacity: 0;
     transition: opacity 0.3s ease-in-out;
-
 }
 
 /* definito global perchè deve essere applicato in maniera dinamica da ts*/
@@ -338,7 +344,9 @@ body {
     cursor: pointer;
     font-size: 1em;
     font-weight: 500;
-    transition: background-color 0.2s ease, box-shadow 0.2s ease;
+    transition:
+        background-color 0.2s ease,
+        box-shadow 0.2s ease;
 }
 
 .modal-actions .button.confirm {

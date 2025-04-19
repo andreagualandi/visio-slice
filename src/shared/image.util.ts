@@ -18,7 +18,7 @@ interface CropRect {
 export async function cropImage(sourceDataUrl: string, cropRect: CropRect): Promise<string> {
     // Usa DPR fornito o default a 1
     const dpr: number = cropRect.dpr || 1;
-    console.log("Avvio ritaglio con coordinate:", cropRect, "e DPR:", dpr);
+    console.log('Avvio ritaglio con coordinate:', cropRect, 'e DPR:', dpr);
 
     try {
         // 1. Carica l'immagine sorgente in un ImageBitmap
@@ -61,8 +61,14 @@ export async function cropImage(sourceDataUrl: string, cropRect: CropRect): Prom
         // ctx.drawImage(image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);
         ctx.drawImage(
             imageBitmap,
-            sx, sy, sWidth, sHeight,          // Rettangolo sorgente (dall'immagine originale in device px)
-            0, 0, outputWidth, outputHeight   // Rettangolo destinazione (sul nuovo canvas in device px)
+            sx,
+            sy,
+            sWidth,
+            sHeight, // Rettangolo sorgente (dall'immagine originale in device px)
+            0,
+            0,
+            outputWidth,
+            outputHeight // Rettangolo destinazione (sul nuovo canvas in device px)
         );
 
         imageBitmap.close(); // Libera memoria
@@ -85,11 +91,11 @@ export async function cropImage(sourceDataUrl: string, cropRect: CropRect): Prom
             reader.readAsDataURL(croppedBlob);
         });
 
-        console.log("Ritaglio immagine completato.");
+        console.log('Ritaglio immagine completato.');
         return dataUrl;
-
-    } catch (error: any) { // Cattura qualsiasi errore
-        console.error("Errore dettagliato durante il ritaglio immagine:", error);
+    } catch (error: any) {
+        // Cattura qualsiasi errore
+        console.error('Errore dettagliato durante il ritaglio immagine:', error);
         // Rilancia un errore per segnalare il fallimento al chiamante
         throw new Error(`Ritaglio immagine fallito: ${error.message || 'Errore sconosciuto'}`);
     }
@@ -119,7 +125,7 @@ export async function createThumbnail(imageDataUrl: string, targetWidth: number)
 
         if (originalWidth === 0 || originalHeight === 0) {
             imageBitmap.close(); // Chiudi comunque il bitmap
-            throw new Error("Dimensioni immagine originale non valide (0) per creare miniatura.");
+            throw new Error('Dimensioni immagine originale non valide (0) per creare miniatura.');
         }
 
         // 3. Calcola l'altezza mantenendo le proporzioni
@@ -157,18 +163,18 @@ export async function createThumbnail(imageDataUrl: string, targetWidth: number)
                 if (typeof reader.result === 'string') {
                     resolve(reader.result);
                 } else {
-                    reject(new Error("FileReader non ha restituito una stringa Data URL per la miniatura."));
+                    reject(new Error('FileReader non ha restituito una stringa Data URL per la miniatura.'));
                 }
             };
             reader.onerror = (e) => reject(new Error(`Errore FileReader per miniatura: ${e}`)); // FileReader ErrorEvent
             reader.readAsDataURL(thumbnailBlob);
         });
 
-        console.log("Creazione miniatura completata.");
+        console.log('Creazione miniatura completata.');
         return dataUrl; // Risolve con la Data URL della miniatura
-
-    } catch (error: any) { // Cattura qualsiasi errore
-        console.error("Errore dettagliato durante la creazione della miniatura:", error);
+    } catch (error: any) {
+        // Cattura qualsiasi errore
+        console.error('Errore dettagliato durante la creazione della miniatura:', error);
         // Rilancia l'errore per permettere al chiamante di gestirlo
         throw new Error(`Creazione miniatura fallita: ${error.message || 'Errore sconosciuto'}`);
     }
