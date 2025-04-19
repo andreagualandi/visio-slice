@@ -6,8 +6,14 @@
  * @param message Optional: Messaggio specifico da mostrare nella modale (default: null).
  * @param messageElementId Optional: ID dell'elemento <p> (o simile) dove mostrare il messaggio (default: 'modalMessage').
  */
-export function showModal(modalId: string = 'deleteConfirmationModal', message: string | null = null, messageElementId: string = 'modalMessage'): void {
-    console.log(`showModal called: modalId=<span class="math-inline">\{modalId\}, message\=</span>{message}, messageElementId=${messageElementId}`);
+export function showModal(
+    modalId: string = 'deleteConfirmationModal',
+    message: string | null = null,
+    messageElementId: string = 'modalMessage'
+): void {
+    console.log(
+        `showModal called: modalId=<span class="math-inline">\{modalId\}, message\=</span>{message}, messageElementId=${messageElementId}`
+    );
     // Trova l'elemento overlay della modale
     const modalOverlay: HTMLElement | null = document.getElementById(modalId);
     console.log('Modal overlay found in DOM:', modalOverlay);

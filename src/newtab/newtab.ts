@@ -18,12 +18,20 @@ interface StoredItemData {
 // --- Riferimenti Elementi DOM Principali (Tipizzati) ---
 const sidebarListElement: HTMLElement | null = document.getElementById('sidebar-content');
 const workspaceContentElement: HTMLElement | null = document.getElementById('workspace-content');
-const workspaceMessageElement: HTMLParagraphElement | null = document.getElementById('workspace-message') as HTMLParagraphElement | null;
-const sidebarLoadingElement: HTMLParagraphElement | null = document.getElementById('sidebar-loading') as HTMLParagraphElement | null;
+const workspaceMessageElement: HTMLParagraphElement | null = document.getElementById(
+    'workspace-message'
+) as HTMLParagraphElement | null;
+const sidebarLoadingElement: HTMLParagraphElement | null = document.getElementById(
+    'sidebar-loading'
+) as HTMLParagraphElement | null;
 const modalOverlay: HTMLElement | null = document.getElementById('deleteConfirmationModal');
-const modalConfirmBtn: HTMLButtonElement | null = document.getElementById('modalConfirmBtn') as HTMLButtonElement | null;
+const modalConfirmBtn: HTMLButtonElement | null = document.getElementById(
+    'modalConfirmBtn'
+) as HTMLButtonElement | null;
 const modalCancelBtn: HTMLButtonElement | null = document.getElementById('modalCancelBtn') as HTMLButtonElement | null;
-const percentSlider: HTMLInputElement | null = document.getElementById('columnPercentSlider') as HTMLInputElement | null;
+const percentSlider: HTMLInputElement | null = document.getElementById(
+    'columnPercentSlider'
+) as HTMLInputElement | null;
 const percentDisplay: HTMLSpanElement | null = document.getElementById('sliderValueDisplay') as HTMLSpanElement | null;
 const storageInfoElement: HTMLDivElement | null = document.getElementById('storage-info') as HTMLDivElement | null;
 
@@ -197,7 +205,11 @@ async function loadInitialData(): Promise<void> {
         allFetchedItems = Object.entries(items)
             .filter(
                 ([key, value]) =>
-                    key.startsWith(STORAGE_KEY_PREFIX_CAPTURE) && typeof value === 'object' && value !== null && 'thumb' in value && 'full' in value
+                    key.startsWith(STORAGE_KEY_PREFIX_CAPTURE) &&
+                    typeof value === 'object' &&
+                    value !== null &&
+                    'thumb' in value &&
+                    'full' in value
             )
             .reduce(
                 (acc, [key, value]) => {
@@ -208,7 +220,9 @@ async function loadInitialData(): Promise<void> {
             );
 
         const captureKeys: string[] = Object.keys(allFetchedItems).sort(
-            (a, b) => (parseInt(b.substring(STORAGE_KEY_PREFIX_CAPTURE.length), 10) || 0) - (parseInt(a.substring(STORAGE_KEY_PREFIX_CAPTURE.length), 10) || 0)
+            (a, b) =>
+                (parseInt(b.substring(STORAGE_KEY_PREFIX_CAPTURE.length), 10) || 0) -
+                (parseInt(a.substring(STORAGE_KEY_PREFIX_CAPTURE.length), 10) || 0)
         );
 
         sidebarLoadingElement?.remove();
@@ -287,7 +301,11 @@ function handleSidebarItemDeleteClick(itemId: string): void {
     itemToDeleteId = itemId;
     const itemTimestamp: string = formatTimestamp(itemId);
 
-    showModal('deleteConfirmationModal', `Sei sicuro di voler eliminare la cattura del ${itemTimestamp}?`, 'modalMessage');
+    showModal(
+        'deleteConfirmationModal',
+        `Sei sicuro di voler eliminare la cattura del ${itemTimestamp}?`,
+        'modalMessage'
+    );
 }
 
 /**

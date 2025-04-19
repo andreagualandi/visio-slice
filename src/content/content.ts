@@ -273,7 +273,15 @@ interface SelectionPayload extends Rect {
         appState.currentRect = null;
         appState.interaction = { type: null, handle: null, startX: 0, startY: 0, initialRect: null };
         // Resetta riferimenti elementi
-        appState.elements = { overlay: null, blocker: null, cancel: null, style: null, border: null, saveBtn: null, handles: [] };
+        appState.elements = {
+            overlay: null,
+            blocker: null,
+            cancel: null,
+            style: null,
+            border: null,
+            saveBtn: null,
+            handles: [],
+        };
         window.webAreaSaverActive = false; // Resetta flag globale
         log('Cleanup completato.');
     };
@@ -303,7 +311,10 @@ interface SelectionPayload extends Rect {
                 log('Operazione annullata con ESC.');
                 cleanup();
             }
-        } else if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key) && appState.currentState === 'selected') {
+        } else if (
+            ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key) &&
+            appState.currentState === 'selected'
+        ) {
             // Spostamento fine (Nudge) con frecce
             e.preventDefault();
             const delta: number = e.shiftKey ? 10 : 1; // Valore spostamento
@@ -425,7 +436,10 @@ interface SelectionPayload extends Rect {
             // Crea la stringa per il poligono di clip-path
             const clipCoords: string = `${rect.left}px ${rect.top}px, ${rect.left}px ${rect.top + rect.height}px, ${rect.left + rect.width}px ${rect.top + rect.height}px, ${rect.left + rect.width}px ${rect.top}px, ${rect.left}px ${rect.top}px`;
             // Applica il clip-path all'overlay (mostra area selezionata trasparente)
-            setClipPath(appState.elements.overlay, `polygon(evenodd, 0 0, 0 100%, 100% 100%, 100% 0, 0 0, ${clipCoords})`);
+            setClipPath(
+                appState.elements.overlay,
+                `polygon(evenodd, 0 0, 0 100%, 100% 100%, 100% 0, 0 0, ${clipCoords})`
+            );
         } else {
             // Se il rettangolo non è valido (width/height 0), nascondi bordo e resetta clip
             appState.elements.border.style.display = 'none';
@@ -545,16 +559,19 @@ interface SelectionPayload extends Rect {
             log('Invio dati al background:', dataToSend);
             try {
                 // Invia messaggio al background script usando la costante e i dati tipizzati
-                chrome.runtime.sendMessage({ type: MSG_TYPE_SELECTION_COMPLETE, data: dataToSend }, (response?: any) => {
-                    // Callback opzionale
-                    if (chrome.runtime.lastError) {
-                        log('Errore invio messaggio:', chrome.runtime.lastError.message);
-                        // Potrebbe essere utile mostrare un toast qui se l'invio fallisce subito
-                        // showToast(`Errore comunicazione: ${chrome.runtime.lastError.message}`, true);
-                    } else {
-                        log('Messaggio SELECTION_COMPLETE inviato con successo.', response);
+                chrome.runtime.sendMessage(
+                    { type: MSG_TYPE_SELECTION_COMPLETE, data: dataToSend },
+                    (response?: any) => {
+                        // Callback opzionale
+                        if (chrome.runtime.lastError) {
+                            log('Errore invio messaggio:', chrome.runtime.lastError.message);
+                            // Potrebbe essere utile mostrare un toast qui se l'invio fallisce subito
+                            // showToast(`Errore comunicazione: ${chrome.runtime.lastError.message}`, true);
+                        } else {
+                            log('Messaggio SELECTION_COMPLETE inviato con successo.', response);
+                        }
                     }
-                });
+                );
             } catch (error: any) {
                 log('Eccezione durante sendMessage:', error);
                 showToast(`Errore imprevisto estensione: ${error.message}`, true);
@@ -589,9 +606,21 @@ interface SelectionPayload extends Rect {
         // Usiamo un tipo mappato per maggiore sicurezza
         const positions: { [key: string]: { top: number; left: number; cursor: string } } = {
             'top-left': { top: rect.top - handleSizeOffset, left: rect.left - handleSizeOffset, cursor: 'nwse-resize' },
-            'top-right': { top: rect.top - handleSizeOffset, left: rect.left + rect.width - handleSizeOffset, cursor: 'nesw-resize' },
-            'bottom-left': { top: rect.top + rect.height - handleSizeOffset, left: rect.left - handleSizeOffset, cursor: 'nesw-resize' },
-            'bottom-right': { top: rect.top + rect.height - handleSizeOffset, left: rect.left + rect.width - handleSizeOffset, cursor: 'nwse-resize' },
+            'top-right': {
+                top: rect.top - handleSizeOffset,
+                left: rect.left + rect.width - handleSizeOffset,
+                cursor: 'nesw-resize',
+            },
+            'bottom-left': {
+                top: rect.top + rect.height - handleSizeOffset,
+                left: rect.left - handleSizeOffset,
+                cursor: 'nesw-resize',
+            },
+            'bottom-right': {
+                top: rect.top + rect.height - handleSizeOffset,
+                left: rect.left + rect.width - handleSizeOffset,
+                cursor: 'nwse-resize',
+            },
             // Aggiungere altri handle (es. laterali) qui se necessario
         };
 

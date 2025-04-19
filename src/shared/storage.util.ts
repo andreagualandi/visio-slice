@@ -52,5 +52,9 @@ export const storageRemove = (keys: string | string[]): Promise<void> =>
  */
 export function isQuotaError(error: any): boolean {
     // Controlla se error esiste e ha una proprietà message di tipo stringa
-    return error && typeof error.message === 'string' && (error.message.includes('QUOTA_BYTES') || error.message.toLowerCase().includes('quota'));
+    return (
+        error &&
+        typeof error.message === 'string' &&
+        (error.message.includes('QUOTA_BYTES') || error.message.toLowerCase().includes('quota'))
+    );
 }

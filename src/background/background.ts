@@ -5,7 +5,6 @@ import { storageSet, isQuotaError } from '../shared/storage.util';
 import { cropImage, createThumbnail } from '../shared/image.util';
 import {
     MSG_TYPE_SELECTION_COMPLETE,
-    MSG_TYPE_CAPTURE_ERROR,
     MSG_TYPE_SAVE_SUCCESS,
     MSG_TYPE_SAVE_ERROR,
     STORAGE_KEY_PREFIX_CAPTURE,
@@ -93,7 +92,9 @@ function notifyContentScript(tabId: number, type: string, message: string): void
     chrome.tabs
         .sendMessage(tabId, payload)
         .catch((e: Error) =>
-            console.warn(`Web Area Saver: Impossibile inviare messaggio a tab ${tabId} (forse chiusa o senza content script attivo?): ${e.message}`)
+            console.warn(
+                `Web Area Saver: Impossibile inviare messaggio a tab ${tabId} (forse chiusa o senza content script attivo?): ${e.message}`
+            )
         );
 }
 
@@ -216,7 +217,11 @@ chrome.action.onClicked.addListener(async (tab: chrome.tabs.Tab) => {
 
 // Listener per i messaggi dal content script
 chrome.runtime.onMessage.addListener(
-    (message: MessagePayload | any, sender: chrome.runtime.MessageSender, sendResponse: (response?: any) => void): boolean | undefined => {
+    (
+        message: MessagePayload | any,
+        sender: chrome.runtime.MessageSender,
+        sendResponse: (response?: any) => void
+    ): boolean | undefined => {
         // Controlla se il tipo è quello atteso
         if (message?.type === MSG_TYPE_SELECTION_COMPLETE) {
             console.log('Web Area Saver (Background): Ricevuto messaggio SELECTION_COMPLETE.');
@@ -228,10 +233,17 @@ chrome.runtime.onMessage.addListener(
                 // Non è necessario restituire true perché non usiamo sendResponse qui.
                 // Restituire false o undefined indica che il canale del messaggio può essere chiuso.
             } else {
-                console.error("Web Area Saver (Background): Ricevuto SELECTION_COMPLETE ma i dati ('message.data') sono mancanti o non validi.", message);
+                console.error(
+                    "Web Area Saver (Background): Ricevuto SELECTION_COMPLETE ma i dati ('message.data') sono mancanti o non validi.",
+                    message
+                );
                 // Potresti voler notificare il content script di questo errore?
                 if (sender.tab?.id) {
-                    notifyContentScript(sender.tab.id, MSG_TYPE_SAVE_ERROR, 'Errore interno: Dati di selezione mancanti o corrotti.');
+                    notifyContentScript(
+                        sender.tab.id,
+                        MSG_TYPE_SAVE_ERROR,
+                        'Errore interno: Dati di selezione mancanti o corrotti.'
+                    );
                 }
             }
         } else {
