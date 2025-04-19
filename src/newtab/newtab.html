@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="it">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visio Slice - Catches</title>
+</head>
+
+<body>
+    <div class="app-container">
+        <aside id="sidebar">
+            <div class="sidebar-header">
+                <h2>Catches</h2>
+                <div class="sidebar-section">
+                    <label for="columnPercentSlider">Larghezza Min % Colonne:</label>
+                    <input type="range" id="columnPercentSlider" name="columnPercentSlider" min="10" max="51" value="33" step="1">
+                    <span id="sliderValueDisplay">33</span>%
+                </div>
+            </div>
+            <div id="sidebar-content" class="sidebar-list">
+                <p id="sidebar-loading" class="sidebar-message">Caricamento...</p>
+            </div>
+            <div class="sidebar-footer">Web Area Saver
+                <div id="storage-info" style="font-size: 0.9em; margin-top: 5px; color: #6c757d;"></div>
+            </div>
+        </aside>
+        <main id="workspace">
+            <div id="workspace-content">
+                <p id="workspace-message">Seleziona una o più catture dalla sidebar per visualizzarle qui.</p>
+            </div>
+        </main>
+    </div>
+    <div id="deleteConfirmationModal" class="modal-overlay">
+        <div class="modal-content">
+            <h3>Conferma Eliminazione</h3>
+            <p id="modalMessage">Sei sicuro di voler eliminare definitivamente questa cattura? L'azione non può essere annullata.</p>
+            <div class="modal-actions">
+                <button id="modalConfirmBtn" class="button confirm" aria-label="Conferma eliminazione">Elimina</button>
+                <button id="modalCancelBtn" class="button cancel" aria-label="Annulla eliminazione">Annulla</button>
+            </div>
+        </div>
+    </div>
+    <script src="./newtab.ts" type="module"></script>
+</body>
+
+</html>

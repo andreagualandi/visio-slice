@@ -1,0 +1,367 @@
+// src/newtab/newtab.module.scss
+// Contenuto copiato da codice/newtab.css
+
+:root {
+    --primary-bg: #f8f9fa;
+    --secondary-bg: #e9ecef;
+    --content-bg: #ffffff;
+    --primary-text: #333;
+    --secondary-text: #495057;
+    --muted-text: #6c757d;
+    --border-color: #ced4da;
+    --border-color-light: #dee2e6;
+    --accent-color: #0064FF;
+    --success-color: #28a745;
+    --danger-color: #dc3545;
+    --box-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+    --box-shadow-md: 0 3px 6px rgba(0, 0, 0, 0.1);
+}
+
+html,
+body {
+    height: 100%;
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background-color: var(--primary-bg);
+    color: var(--primary-text);
+    overflow: hidden;
+}
+
+.app-container {
+    // Questa classe diventerà styles.appContainer in TS
+    display: flex;
+    height: 100vh;
+}
+
+/* --- Sidebar Styles --- */
+:global(#sidebar) {
+    // Gli ID rimangono selettori globali, non vengono modificati da CSS Modules
+    width: 260px;
+    flex-shrink: 0;
+    background-color: var(--secondary-bg);
+    border-right: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+.sidebar-header {
+    // Diventerà styles.sidebarHeader
+    padding: 15px;
+    border-bottom: 1px solid var(--border-color);
+    flex-shrink: 0;
+}
+
+.sidebar-header h2 {
+    margin: 0;
+    font-size: 1.1em;
+    color: var(--secondary-text);
+    margin-bottom: 10px;
+    /* Aggiunto spazio sotto il titolo */
+}
+
+.sidebar-list {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 10px;
+}
+
+.sidebar-message {
+    padding: 20px;
+    text-align: center;
+    color: var(--muted-text);
+}
+
+.sidebar-item {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: var(--content-bg);
+    border: 1px solid var(--border-color-light);
+    border-radius: 5px;
+    margin-bottom: 12px;
+    padding: 10px;
+    cursor: pointer;
+    transition: background-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out, border-color 0.2s ease-in-out;
+    box-shadow: var(--box-shadow-sm);
+
+    &[data-selected="true"] {
+        background-color: #e7f1ff; // Stile selezionato
+        border-color: #a6cfff; // Stile selezionato
+        box-shadow: var(--box-shadow-md); // Stile selezionato
+    }
+}
+
+.sidebar-item:hover {
+    background-color: var(--primary-bg);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+.sidebar-item img {
+    max-width: 100%;
+    height: auto;
+    max-height: 150px;
+    object-fit: contain;
+    margin-bottom: 8px;
+    border-radius: 3px;
+}
+
+.sidebar-item span {
+    font-size: 0.8em;
+    color: var(--secondary-text);
+    text-align: center;
+    word-break: break-word;
+}
+
+.sidebar-footer {
+    padding: 10px;
+    font-size: 0.8em;
+    text-align: center;
+    border-top: 1px solid var(--border-color);
+    color: var(--muted-text);
+    flex-shrink: 0;
+}
+
+.delete-btn {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    width: 24px;
+    height: 24px;
+    background-color: rgba(108, 117, 125, 0.6);
+    /* var(--muted-text) con trasparenza? */
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    line-height: 1;
+    padding: 0;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+    z-index: 2;
+}
+
+.sidebar-item:hover .delete-btn {
+    display: flex;
+}
+
+.delete-btn:hover {
+    background-color: rgba(220, 53, 69, 0.85);
+    /* var(--danger-color) con trasparenza? */
+    transform: scale(1.1);
+}
+
+/* --- Stili per Controlli Sidebar (es. Slider) --- */
+.sidebar-section {
+    padding: 10px 15px;
+    border-top: 1px solid var(--border-color);
+    /* Usa variabile */
+    margin-top: 10px;
+    font-size: 0.9em;
+    color: var(--secondary-text);
+    /* Usa variabile */
+}
+
+.sidebar-section label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+}
+
+:global(#columnPercentSlider) {
+    width: 100%;
+    cursor: pointer;
+    margin-bottom: 5px;
+}
+
+:global(#sliderValueDisplay) {
+    font-weight: bold;
+    margin: 0 2px 0 4px;
+    min-width: 1.5em;
+    display: inline-block;
+    text-align: right;
+}
+
+/* --- Workspace Styles --- */
+:global(#workspace) {
+    flex-grow: 1;
+    height: 100vh;
+    overflow-y: auto;
+    background-color: var(--primary-bg);
+    /* Usa variabile */
+    padding: 0;
+}
+
+:global(#workspace-content) {
+    display: grid;
+    --fixed-min-px: 250px;
+    --min-column-percent: 33%;
+    /* Valore di default, JS lo aggiorna */
+    grid-template-columns: repeat(auto-fit, minmax(max(var(--fixed-min-px), var(--min-column-percent)), 1fr));
+    gap: 15px;
+    padding: 20px;
+    align-content: start;
+}
+
+:global(#workspace-content p#workspace-message) {
+    width: 100%;
+    color: var(--muted-text);
+    /* Usa variabile */
+    font-size: 1.2em;
+    text-align: center;
+    margin-top: 50px;
+}
+
+.workspace-image-container {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: 1px solid var(--border-color);
+    /* Usa variabile */
+    background-color: var(--content-bg);
+    /* Usa variabile */
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.07);
+    /* Potrebbe diventare var(--box-shadow-sm) o simile */
+    overflow: hidden;
+}
+
+.workspace-image-container img {
+    display: block;
+    max-width: 100%;
+    max-height: calc(100vh - 42px);
+    /* (100vh - 40px padding - 2px border) */
+    object-fit: contain;
+}
+
+.close-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 22px;
+    height: 22px;
+    background-color: rgba(0, 0, 0, 0.6);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: bold;
+    line-height: 1;
+    padding: 0;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.close-btn:hover {
+    background-color: rgba(220, 53, 69, 0.8);
+    /* var(--danger-color) con trasparenza? */
+    transform: scale(1.1);
+}
+
+.close-btn:active {
+    transform: scale(1.0);
+}
+
+/* --- Stili per la Modale di Conferma --- */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.65);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+
+}
+
+/* definito global perchè deve essere applicato in maniera dinamica da ts*/
+:global(#deleteConfirmationModal.visible) {
+    display: flex;
+    opacity: 1;
+}
+
+.modal-content {
+    background-color: var(--content-bg);
+    /* Usa variabile */
+    padding: 25px 35px;
+    border-radius: 8px;
+    text-align: center;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.25);
+    max-width: 450px;
+    width: 90%;
+    transform: scale(0.95);
+    transition: transform 0.3s ease-in-out;
+}
+
+.modal-overlay.visible .modal-content {
+    transform: scale(1);
+}
+
+.modal-content h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    color: var(--danger-color);
+    /* Usa variabile */
+}
+
+.modal-content p {
+    margin-bottom: 25px;
+    font-size: 1.05em;
+    color: var(--secondary-text);
+    /* Usa variabile */
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+}
+
+.modal-actions .button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1em;
+    font-weight: 500;
+    transition: background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.modal-actions .button.confirm {
+    background-color: var(--danger-color);
+    /* Usa variabile */
+    color: white;
+}
+
+.modal-actions .button.confirm:hover {
+    background-color: #c82333;
+    /* Calcolare versione più scura di var(--danger-color) */
+    box-shadow: 0 2px 5px rgba(220, 53, 69, 0.4);
+    /* Ombra basata su var(--danger-color) */
+}
+
+.modal-actions .button.cancel {
+    background-color: var(--muted-text);
+    /* Usa variabile */
+    color: white;
+}
+
+.modal-actions .button.cancel:hover {
+    // Esempio classe complessa -> styles.cancel
+    background-color: #5a6268;
+    box-shadow: 0 2px 5px rgba(108, 117, 125, 0.3);
+}
