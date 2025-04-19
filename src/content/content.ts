@@ -4,7 +4,9 @@
 import {
     MSG_TYPE_SAVE_SUCCESS,
     MSG_TYPE_SAVE_ERROR,
-    MSG_TYPE_SELECTION_COMPLETE, // Usato per inviare il messaggio
+    MSG_TYPE_SELECTION_COMPLETE,
+    MSG_TYPE_ACTIVATE_CAPTURE,
+    CONTENT_SCRIPT_READY,
 } from '../shared/constants';
 
 // --- Definizione Tipi e Interfacce ---
@@ -66,81 +68,7 @@ interface SelectionPayload extends Rect {
 (function () {
     // Funzione di logging con tipo per rest parameters
     const log = (...args: unknown[]): void => console.log('[WebAreaSaver]', ...args);
-
-    // --- Listener Messaggi Background ---
-    const handleBackgroundMessages = (
-        message: unknown, // Usa unknown
-        _sender: chrome.runtime.MessageSender, // Prefisso se non usato
-        _sendResponse: (response?: unknown) => void // Prefisso e unknown
-    ): boolean | undefined => {
-        // Type guard per sicurezza
-        if (
-            typeof message !== 'object' ||
-            message === null ||
-            !('type' in message) ||
-            typeof message.type !== 'string'
-        ) {
-            log('WARN: Ricevuto messaggio background non valido:', message);
-            return false;
-        }
-        // Ora possiamo accedere a message.type in sicurezza
-        log('Messaggio ricevuto dal background:', message);
-
-        // Usa costante se definita per ACTIVATE_CAPTURE
-        if (message.type === 'ACTIVATE_CAPTURE') {
-            activateCaptureUI();
-            return false;
-        }
-
-        // Assumi che se il tipo è SAVE o ERROR, 'message' esista come stringa
-        const msgContent = 'message' in message && typeof message.message === 'string' ? message.message : undefined;
-
-        if (message.type === MSG_TYPE_SAVE_SUCCESS) {
-            showToast(msgContent || 'Salvataggio completato');
-        } else if (message.type === MSG_TYPE_SAVE_ERROR /* || message.type === MSG_TYPE_CAPTURE_ERROR */) {
-            // MSG_TYPE_CAPTURE_ERROR non definito qui
-            showToast(msgContent || 'Errore durante il salvataggio/cattura', true);
-        } else {
-            log('WARN: Ricevuto tipo messaggio non gestito:', message.type);
-        }
-        return false;
-    };
-
-    // Aggiungi listener solo se non già presente
-    if (!window.webAreaSaverListenerAttached) {
-        chrome.runtime.onMessage.addListener(handleBackgroundMessages);
-        window.webAreaSaverListenerAttached = true;
-        log('Listener messaggi background aggiunto.');
-    } else {
-        log('Listener messaggi background già presente.');
-    }
-
-    // --- Guardia Script Principale ---
-    if (window.webAreaSaverActive) {
-        log('Script già caricato.'); // Solo log, non esce subito
-        // Potrebbe servire gestire una riattivazione? Per ora no.
-        // return; // Rimuoviamo il return immediato
-    } else {
-        window.webAreaSaverActive = true; // Imposta il flag la prima volta
-        log('Script caricato per la prima volta.');
-    }
-
-    function activateCaptureUI() {
-        // Controllo aggiuntivo per evitare attivazioni multiple se serve
-        if (appState.isActive) {
-            log('UI già attiva.');
-            return;
-        }
-        log('Attivazione interfaccia di cattura...');
-        appState.isActive = true; // Stato logico interno dell'UI
-        createUI(); // Crea elementi UI
-        window.addEventListener('keydown', onKeyDown); // Aggiungi listener tastiera
-        log('Interfaccia inizializzata. Stato: idle.');
-        // Assicurarsi che il blocker abbia il listener 'mousedown' iniziale
-        if (appState.elements.blocker) {
-            appState.elements.blocker.addEventListener('mousedown', onMouseDown);
-        }
-    }
+    log('window.webAreaSaverActive => ', window.webAreaSaverActive);
 
     // --- Stato Applicazione Tipizzato ---
     const appState: AppState = {
@@ -246,15 +174,14 @@ interface SelectionPayload extends Rect {
         }, 3500);
     };
 
-    // Funzione di cleanup (ritorno void)
-    const cleanup = (): void => {
-        log('Cleanup...');
+    // Si occupa solo di nascondere/rimuovere l'UI di cattura e i listener temporanei.
+    const deactivateCaptureUI = (): void => {
+        log('Deattivazione UI cattura...');
 
-        // Rimuovi listener specifici con tipi evento corretti
+        // Rimuovi listener specifici dell'interazione/disegno
         appState.elements.blocker?.removeEventListener('mousedown', onMouseDown);
         appState.elements.blocker?.removeEventListener('mousedown', onInteractionStart);
         appState.elements.handles.forEach((handle: HTMLDivElement) => {
-            // Tipo per handle nell'array
             handle.removeEventListener('mousedown', onInteractionStart);
         });
         window.removeEventListener('keydown', onKeyDown);
@@ -263,34 +190,35 @@ interface SelectionPayload extends Rect {
         window.removeEventListener('mousemove', throttledOnInteractionMove);
         window.removeEventListener('mouseup', onInteractionEnd);
 
-        // Rimuovi elementi DOM
-        Object.values(appState.elements).forEach((el: HTMLElement | HTMLElement[] | null) => {
-            if (Array.isArray(el)) {
-                el.forEach((e: HTMLElement) => e?.remove()); // Assumiamo HTMLElement nell'array
-            } else {
-                el?.remove();
-            }
-        });
+        // Rimuovi elementi DOM specifici della cattura
+        // (Lascia gli stili iniettati, potrebbero servire di nuovo)
+        appState.elements.overlay?.remove();
+        appState.elements.blocker?.remove();
+        appState.elements.cancel?.remove();
+        appState.elements.border?.remove();
+        appState.elements.saveBtn?.remove();
+        appState.elements.handles.forEach((h) => h.remove());
 
-        // Resetta stato
-        document.body.style.cursor = appState.originalCursor; // Ripristina cursore
+        // Resetta stato INTERNO (non il flag globale)
+        document.body.style.cursor = appState.originalCursor;
         appState.isActive = false;
         appState.isDrawing = false;
         appState.currentState = 'idle';
         appState.currentRect = null;
         appState.interaction = { type: null, handle: null, startX: 0, startY: 0, initialRect: null };
-        // Resetta riferimenti elementi
-        appState.elements = {
-            overlay: null,
-            blocker: null,
-            cancel: null,
-            style: null,
-            border: null,
-            saveBtn: null,
-            handles: [],
-        };
-        window.webAreaSaverActive = false; // Resetta flag globale
-        log('Cleanup completato.');
+
+        // Resetta riferimenti elementi DOM
+        appState.elements.overlay = null;
+        appState.elements.blocker = null;
+        appState.elements.cancel = null;
+        // appState.elements.style = null; // Lasciamo gli stili
+        appState.elements.border = null;
+        appState.elements.saveBtn = null;
+        appState.elements.handles = [];
+
+        // NON RESETTARE window.webAreaSaverActive = false;
+
+        log('Deattivazione UI completata.');
     };
 
     // --- Gestione Eventi ---
@@ -298,47 +226,24 @@ interface SelectionPayload extends Rect {
     // Handler tastiera (tipo evento: KeyboardEvent)
     const onKeyDown = (e: KeyboardEvent): void => {
         if (e.key === 'Escape') {
-            if (appState.interaction.type) {
-                // Se sto interagendo (move/resize)
-                log('Interazione annullata con ESC');
-                // Interrompi interazione corrente
-                appState.interaction.type = null;
-                window.removeEventListener('mousemove', throttledOnInteractionMove);
-                window.removeEventListener('mouseup', onInteractionEnd);
-                // Ripristina rettangolo precedente
-                if (appState.interaction.initialRect) {
-                    appState.currentRect = { ...appState.interaction.initialRect };
-                }
-                appState.currentState = 'selected';
-                document.body.style.cursor = 'default'; // Ripristina cursore body
-                if (appState.elements.blocker) appState.elements.blocker.style.cursor = 'crosshair'; // Cursore blocker
-                updateSelectionUI(); // Ridisegna UI
-            } else {
-                // Altrimenti (disegnando o selezionato ma fermo), annulla tutto
-                log('Operazione annullata con ESC.');
-                cleanup();
-            }
+            log('ESC premuto, annullamento operazione...');
+            deactivateCaptureUI();
         } else if (
             ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key) &&
             appState.currentState === 'selected'
         ) {
             // Spostamento fine (Nudge) con frecce
             e.preventDefault();
-            const delta: number = e.shiftKey ? 10 : 1; // Valore spostamento
+            const delta: number = e.shiftKey ? 10 : 1;
             const rect: Rect | null = appState.currentRect;
-            if (!rect) return; // Se non c'è rettangolo, non fare nulla
-
-            // Crea una copia modificabile
+            if (!rect) return;
             const newRect: Rect = { ...rect };
             if (e.key === 'ArrowUp') newRect.top -= delta;
             if (e.key === 'ArrowDown') newRect.top += delta;
             if (e.key === 'ArrowLeft') newRect.left -= delta;
             if (e.key === 'ArrowRight') newRect.left += delta;
-
-            // TODO: Aggiungere controllo opzionale per non uscire dalla viewport
-
-            appState.currentRect = newRect; // Aggiorna stato
-            updateSelectionUI(); // Aggiorna UI
+            appState.currentRect = newRect;
+            updateSelectionUI();
         }
     };
 
@@ -365,7 +270,7 @@ interface SelectionPayload extends Rect {
         cancel.innerHTML = '&times;'; // Carattere 'X'
         cancel.title = 'Annulla (Esc)';
         cancel.setAttribute('aria-label', 'Annulla cattura');
-        cancel.onclick = cleanup; // Chiama cleanup al click
+        cancel.onclick = deactivateCaptureUI;
         document.body.appendChild(cancel);
         appState.elements.cancel = cancel;
 
@@ -486,7 +391,7 @@ interface SelectionPayload extends Rect {
         if (rect.width < minSize || rect.height < minSize) {
             log(`Selezione troppo piccola: ${rect.width}x${rect.height}`);
             showToast(`Selezione troppo piccola. Minimo ${minSize}x${minSize}px.`, true);
-            cleanup(); // Annulla tutto
+            deactivateCaptureUI(); // Annulla tutto
             return;
         }
 
@@ -584,7 +489,7 @@ interface SelectionPayload extends Rect {
                 const message = error instanceof Error ? error.message : String(error);
                 showToast(`Errore estensione: ${message}`, true);
             } finally {
-                cleanup();
+                deactivateCaptureUI();
             }
         }, delayMs);
     };
@@ -845,12 +750,87 @@ interface SelectionPayload extends Rect {
     const throttledOnMouseMove = simpleThrottle(onMouseMove, THROTTLE_LIMIT_MS);
     const throttledOnInteractionMove = simpleThrottle(onInteractionMove, THROTTLE_LIMIT_MS);
 
-    // Imposta stato attivo e crea UI iniziale
-    // --- NON attivare l'UI qui ---
-    // appState.isActive = true; // Rimosso
-    // createUI(); // Rimosso
-    // window.addEventListener('keydown', onKeyDown); // Rimosso
-    // log('Interfaccia inizializzata. Stato: idle.'); // Rimosso
+    // --- Inizializzazione UI (avviene subito dopo iniezione) ---
 
-    log('Content script caricato e in ascolto.'); // Log generico al caricamento
+    // QUESTA FUNZIONE CONTIENE ORA LA LOGICA CHE PRIMA ERA ESEGUITA DIRETTAMENTE NELL'IIFE
+    function initializeCaptureUI(): void {
+        // Controlla se siamo *già* attivi per evitare sovrapposizioni strane
+        if (appState.isActive) {
+            log('Tentativo di inizializzare UI mentre è già attiva. Ignorato.');
+            return;
+        }
+        log('Inizializzazione interfaccia di cattura...');
+        appState.isActive = true; // Imposta lo stato attivo INTERNO
+        appState.currentState = 'idle'; // Stato iniziale
+        appState.isDrawing = false;
+        appState.currentRect = null;
+        appState.interaction = { type: null, handle: null, startX: 0, startY: 0, initialRect: null };
+        appState.originalCursor = document.body.style.cursor || 'default'; // Salva cursore
+
+        // Esegui la creazione UI e aggiunta listener principali
+        injectStyles();
+        createUI();
+        window.addEventListener('keydown', onKeyDown);
+
+        // Aggiungi listener specifici per il disegno (che prima erano in onMouseDown)
+
+        log('Interfaccia di cattura inizializzata e pronta (stato: idle).');
+    }
+
+    // --- Listener Messaggi Background ---
+    const handleBackgroundMessages = (
+        message: unknown, // Usa unknown
+        _sender: chrome.runtime.MessageSender, // Prefisso se non usato
+        _sendResponse: (response?: unknown) => void // Prefisso e unknown
+    ): boolean | undefined => {
+        if (
+            typeof message !== 'object' ||
+            message === null ||
+            !('type' in message) ||
+            typeof message.type !== 'string'
+        ) {
+            log('WARN: Ricevuto messaggio background non valido:', message);
+            return false;
+        }
+
+        log('Messaggio ricevuto dal background:', message.type);
+
+        switch (message.type) {
+            case MSG_TYPE_ACTIVATE_CAPTURE:
+                // Attiva l'interfaccia utente
+                initializeCaptureUI();
+                break;
+            case MSG_TYPE_SAVE_SUCCESS:
+            case MSG_TYPE_SAVE_ERROR:
+                const msgContent =
+                    'message' in message && typeof message.message === 'string' ? message.message : undefined;
+                const isError = message.type === MSG_TYPE_SAVE_ERROR;
+                showToast(msgContent || (isError ? 'Errore' : 'Successo'), isError);
+                // Il cleanup (ora deactivateCaptureUI) dovrebbe essere già stato chiamato
+                // dal blocco finally di handleSaveClick dopo l'invio di SELECTION_COMPLETE
+                break;
+            default:
+                log('WARN: Ricevuto tipo messaggio non gestito:', message.type);
+        }
+        return false; // Indica che non invieremo risposte asincrone qui
+    };
+
+    // Aggiungi listener SOLO UNA VOLTA quando lo script carica
+    if (!window.webAreaSaverListenerAttached) {
+        chrome.runtime.onMessage.addListener(handleBackgroundMessages);
+        window.webAreaSaverListenerAttached = true; // [source: 298]
+        log('Content script caricato e listener onMessage aggiunto.');
+
+        // ---- NUOVO ----
+        // INVIA MESSAGGIO AL BACKGROUND PER INDICARE CHE SIAMO PRONTI
+        log('Invio messaggio CONTENT_SCRIPT_READY al background...');
+        chrome.runtime
+            .sendMessage({ type: CONTENT_SCRIPT_READY })
+            // Puoi ignorare la risposta o gestire eventuali errori qui
+            .then(() => log('Messaggio CONTENT_SCRIPT_READY inviato con successo.'))
+            .catch((err) => console.warn(`Invio CONTENT_SCRIPT_READY fallito: ${err.message}`));
+        // ---- FINE NUOVO ----
+    } else {
+        log('Content script listener già presente.');
+    }
 })(); // --- Fine IIFE ---

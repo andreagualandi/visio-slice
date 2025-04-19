@@ -18,4 +18,9 @@ declare module '*.module.sass' {
     export default classes;
 }
 
-// Puoi aggiungere altre dichiarazioni globali qui se necessario
+// Dice a TypeScript che importare un modulo che finisce con '?script'
+// restituisce una stringa come export di default.
+declare module '*?script' {
+    const scriptPath: string;
+    export default scriptPath;
+}

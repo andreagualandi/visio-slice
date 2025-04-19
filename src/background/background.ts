@@ -8,9 +8,12 @@ import {
     MSG_TYPE_SAVE_SUCCESS,
     MSG_TYPE_SAVE_ERROR,
     STORAGE_KEY_PREFIX_CAPTURE,
+    MSG_TYPE_ACTIVATE_CAPTURE,
+    CONTENT_SCRIPT_READY,
 } from '../shared/constants';
 
-const MSG_TYPE_ACTIVATE_CAPTURE = 'ACTIVATE_CAPTURE'; // todo spostare in const
+// Il percorso deve essere relativo a QUESTO file (background.ts)
+import contentScriptPath from '../content/content.ts?script';
 
 // Interfaccia per i dati della selezione ricevuti dal content script
 interface SelectionData {
@@ -171,20 +174,85 @@ async function handleCaptureRequest(selectionData: SelectionData, sender: chrome
 // --- LISTENER PRINCIPALI (onClicked e onMessage) ---
 // Listener per il click sull'icona
 chrome.action.onClicked.addListener(async (tab: chrome.tabs.Tab) => {
-    if (tab.id) {
-        const targetTabId = tab.id;
-        console.log(`Click azione: Invio messaggio ACTIVATE_CAPTURE a tab ${targetTabId}`);
+    if (!tab.id) {
+        console.error('Impossibile ottenere ID scheda.');
+        return;
+    }
+    const targetTabId: number = tab.id;
+    console.log(`Azione cliccata per tab ${targetTabId}`);
+
+    try {
+        // 1. Tenta di inviare il messaggio di attivazione
+        console.log(`Invio tentativo 1: ACTIVATE_CAPTURE a tab ${targetTabId}`);
+        await chrome.tabs.sendMessage(targetTabId, { type: MSG_TYPE_ACTIVATE_CAPTURE });
+        console.log(`Messaggio ACTIVATE_CAPTURE inviato (tentativo 1) con successo.`);
+    } catch (error: unknown) {
+        // 2. Se l'invio fallisce, assumiamo che lo script non sia iniettato
+        console.warn(
+            `Invio messaggio (tentativo 1) fallito (${error instanceof Error ? error.message : String(error)}). Inietto script...`
+        );
         try {
-            // Invece di iniettare lo script (che ora è auto-iniettato),
-            // inviamo un messaggio per attivare l'UI nello script già presente.
-            await chrome.tabs.sendMessage(targetTabId, { type: MSG_TYPE_ACTIVATE_CAPTURE });
-            console.log('Messaggio ACTIVATE_CAPTURE inviato.');
-        } catch (err: unknown) {
-            const errorMsg = err instanceof Error ? err.message : String(err);
-            console.error(`Errore invio messaggio ${MSG_TYPE_ACTIVATE_CAPTURE} a tab ${targetTabId}: ${errorMsg}`);
+            // 3. Inietta lo script
+            await chrome.scripting.executeScript({
+                target: { tabId: targetTabId },
+                files: [contentScriptPath],
+            });
+            console.log(`Script '${contentScriptPath}' iniettato con successo.`);
+
+            // ---- NUOVO: Attesa Conferma ----
+            console.log(`In attesa del messaggio CONTENT_SCRIPT_READY da tab ${targetTabId}...`);
+            try {
+                const readyConfirmationPromise = new Promise<void>((resolve, reject) => {
+                    const listener = (message: unknown, sender: chrome.runtime.MessageSender) => {
+                        // AGGIUNGI TYPE GUARD QUI: Controlla che sia un oggetto con la proprietà 'type'
+                        if (
+                            typeof message === 'object' &&
+                            message !== null &&
+                            'type' in message && // Verifica che la chiave 'type' esista
+                            message.type === CONTENT_SCRIPT_READY && // Ora puoi accedere a .type in sicurezza
+                            sender.tab?.id === targetTabId
+                        ) {
+                            console.log(`Ricevuto CONTENT_SCRIPT_READY da tab ${targetTabId}.`);
+                            chrome.runtime.onMessage.removeListener(listener);
+                            clearTimeout(timeoutId);
+                            resolve();
+                            return false; // Indica che il messaggio è stato gestito
+                        }
+                        // Ignora altri messaggi o tipi
+                        return false;
+                    };
+
+                    // Imposta un timeout per sicurezza, nel caso il content script non risponda
+                    const waitTimeout = 5000; // 5 secondi
+                    const timeoutId = setTimeout(() => {
+                        console.error(`Timeout (${waitTimeout}ms) attesa CONTENT_SCRIPT_READY da tab ${targetTabId}.`);
+                        chrome.runtime.onMessage.removeListener(listener); // Pulisci anche in caso di timeout
+                        reject(new Error('Timeout waiting for content script ready signal.'));
+                    }, waitTimeout);
+
+                    // Aggiungi il listener temporaneo per il messaggio di conferma
+                    chrome.runtime.onMessage.addListener(listener);
+                });
+
+                // Aspetta che la Promise si risolva (o venga rigettata dal timeout)
+                await readyConfirmationPromise;
+
+                // 4. DOPO aver ricevuto la conferma, invia il messaggio di attivazione
+                console.log(`Invio ACTIVATE_CAPTURE (post-conferma) a tab ${targetTabId}`);
+                await chrome.tabs.sendMessage(targetTabId, { type: MSG_TYPE_ACTIVATE_CAPTURE });
+                console.log(`Messaggio ACTIVATE_CAPTURE inviato (post-conferma) con successo.`);
+            } catch (waitError: unknown) {
+                // Gestisce errori durante l'attesa (es. timeout) o l'invio post-conferma
+                console.error(
+                    `Errore durante attesa/attivazione post-iniezione: ${waitError instanceof Error ? waitError.message : String(waitError)}`
+                );
+            }
+            // ---- FINE NUOVO: Attesa Conferma ----
+        } catch (injectionError: unknown) {
+            // 5. Gestisce l'errore se anche l'iniezione fallisce
+            const errorMsg = injectionError instanceof Error ? injectionError.message : String(injectionError);
+            console.error(`Errore durante INIEZIONE script: ${errorMsg}`);
         }
-    } else {
-        console.error('Impossibile ottenere ID scheda per attivare cattura.');
     }
 });
 
