@@ -199,7 +199,6 @@ chrome.action.onClicked.addListener(async (tab: chrome.tabs.Tab) => {
             });
             console.log(`Script '${contentScriptPath}' iniettato con successo.`);
 
-            // ---- NUOVO: Attesa Conferma ----
             console.log(`In attesa del messaggio CONTENT_SCRIPT_READY da tab ${targetTabId}...`);
             try {
                 const readyConfirmationPromise = new Promise<void>((resolve, reject) => {
@@ -247,7 +246,6 @@ chrome.action.onClicked.addListener(async (tab: chrome.tabs.Tab) => {
                     `Errore durante attesa/attivazione post-iniezione: ${waitError instanceof Error ? waitError.message : String(waitError)}`
                 );
             }
-            // ---- FINE NUOVO: Attesa Conferma ----
         } catch (injectionError: unknown) {
             // 5. Gestisce l'errore se anche l'iniezione fallisce
             const errorMsg = injectionError instanceof Error ? injectionError.message : String(injectionError);
