@@ -1,7 +1,7 @@
-// src/newtab/newtab.ts
+// src/gallery/gallery.ts
 
 // Importa stili SCSS come modulo
-import styles from './newtab.module.scss';
+import styles from './gallery.module.scss';
 
 // Importa utility e costanti condivise (percorsi aggiornati, senza .ts)
 import { storageGet, storageSet, storageRemove } from '../shared/storage.util';

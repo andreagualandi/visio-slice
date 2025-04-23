@@ -51,7 +51,7 @@ export function hideModal(modalId: string = 'deleteConfirmationModal'): void {
         // Aggiorna attributi ARIA se usati
         // modalOverlay.setAttribute('aria-hidden', 'true');
     }
-    // Nota: l'eventuale stato associato (es. itemToDeleteId nel codice newtab.js)
+    // Nota: l'eventuale stato associato (es. itemToDeleteId nel codice gallery.js)
     // non viene resettato qui, ma nel chiamante che gestisce la logica.
 }
 
