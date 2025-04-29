@@ -47,16 +47,3 @@ export const storageRemove = (keys: string | string[]): Promise<void> =>
             resolve();
         });
     });
-
-/**
- * Controlla se un errore è un errore di quota di chrome.storage.
- * @param error L'oggetto errore (o qualsiasi valore) da controllare.
- * @returns True se l'errore sembra essere un errore di quota, altrimenti false.
- */
-export function isQuotaError(error: unknown): boolean {
-    // Type guard per verificare se è un oggetto simile a Error con 'message'
-    if (typeof error === 'object' && error !== null && 'message' in error && typeof error.message === 'string') {
-        return error.message.includes('QUOTA_BYTES') || error.message.toLowerCase().includes('quota');
-    }
-    return false;
-}

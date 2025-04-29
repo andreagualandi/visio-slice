@@ -50,12 +50,6 @@ export interface AppState {
     elements: AppElements;
 }
 
-// Interfaccia per i dati inviati al background script
-export interface SelectionPayload extends Rect {
-    // Estende Rect
-    dpr: number; // Aggiunge Device Pixel Ratio
-}
-
 // --- Stato Applicazione Tipizzato Esportato ---
 export const appState: AppState = {
     isActive: false,

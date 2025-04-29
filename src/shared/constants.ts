@@ -7,6 +7,7 @@ export const MSG_TYPE_SAVE_ERROR: string = 'SAVE_ERROR';
 export const MSG_TYPE_CAPTURE_ERROR: string = 'CAPTURE_ERROR';
 export const MSG_TYPE_ACTIVATE_CAPTURE = 'ACTIVATE_CAPTURE';
 export const CONTENT_SCRIPT_READY: string = 'CONTENT_SCRIPT_READY';
+export const START_CAPTURE_REQUEST: string = 'START_CAPTURE_REQUEST';
 
 // Chiavi per Chrome Storage
 export const STORAGE_KEY_PREFIX_CAPTURE: string = 'capture_';

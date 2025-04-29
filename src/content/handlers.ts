@@ -1,5 +1,5 @@
 // handlers.ts
-import { appState, Rect, SelectionPayload } from './state';
+import { appState, Rect } from './state';
 import { showToast, createUI, updateSelectionUI } from './ui'; // Importa funzioni UI
 import { initializeDrawingHandlers } from './drawing'; // Importa inizializzatore disegno
 import { initializeInteractionHandlers } from './interaction'; // Importa inizializzatore interazione
@@ -10,6 +10,8 @@ import {
     MSG_TYPE_SAVE_ERROR,
     MSG_TYPE_SELECTION_COMPLETE,
 } from '../shared/constants';
+
+import { SelectionPayload } from '../shared/types';
 
 // Riferimenti alle funzioni di cleanup dei moduli
 let cleanupDrawing: (() => void) | null = null;
