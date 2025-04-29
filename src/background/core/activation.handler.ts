@@ -1,3 +1,5 @@
+// src/background/core/activation.handler.ts
+
 import { sendMessageToTab } from '../../facades/tabs.facade';
 import { executeScript } from '../../facades/scripting.facade';
 import { MSG_TYPE_ACTIVATE_CAPTURE, CONTENT_SCRIPT_READY } from '../../shared/constants';

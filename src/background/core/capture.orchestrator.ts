@@ -1,4 +1,4 @@
-// captureOrchestrator.ts
+// src/background/core/capture.orchestrator.ts
 
 // Importa Facades
 import { sendMessageToTab, captureVisibleTab } from '../../facades/tabs.facade';
@@ -14,69 +14,46 @@ import { SavedCaptureData, SelectionPayload } from '../../shared/types';
 
 const log = (...args: unknown[]): void => console.log('[CaptureOrchestrator]', ...args);
 
-/**
- * Orchestra il processo di cattura: cattura tab, ritaglia, crea miniatura,
- * salva i dati e notifica il content script.
- * @param selectionData I dati della selezione ricevuti dal content script.
- * @param sender Le informazioni sul mittente del messaggio (per ottenere tabId).
- */
+async function performCaptureWorkflow(selection: SelectionPayload): Promise<SavedCaptureData> {
+    const full = await captureVisibleTab();
+    if (!full) throw new Error('Nessuna immagine catturata.');
+
+    const cropped = await imageUtil.cropImage(full, selection);
+    if (!cropped) throw new Error('Errore nel ritaglio immagine.');
+
+    const thumb = await imageUtil.createThumbnail(cropped, 200);
+    if (!thumb) throw new Error('Errore nella generazione della miniatura.');
+
+    return { full: cropped, thumb };
+}
+
 export async function processCaptureRequest(
-    selectionData: SelectionPayload,
+    selection: SelectionPayload,
     sender: chrome.runtime.MessageSender
 ): Promise<void> {
-    const sourceTabId = sender.tab?.id;
-    if (!sourceTabId) {
-        console.error('processCaptureRequest: Chiamato senza un sender.tab.id valido.');
-        // Non possiamo notificare l'errore senza un tabId
+    const tabId = sender.tab?.id;
+    if (!tabId) {
+        console.error('processCaptureRequest: tabId non valido.');
         return;
     }
 
-    log(`Avvio processo cattura per tab ID: ${sourceTabId}`);
-    const timestampKey: string = `${STORAGE_KEY_PREFIX_CAPTURE}${Date.now()}`;
+    const key = `${STORAGE_KEY_PREFIX_CAPTURE}${Date.now()}`;
+    log(`Cattura avviata per tab ${tabId} con chiave ${key}.`);
 
     try {
-        // 1. Cattura la scheda usando la facade
-        log('Cattura tab...');
-        const fullImageDataUrl = await captureVisibleTab(); // Usa facade
-        if (!fullImageDataUrl) throw new Error('captureVisibleTab non ha restituito una data URL.');
+        const capture = await performCaptureWorkflow(selection);
+        await storageSet({ [key]: capture });
+        log(`Dati cattura salvati con chiave ${key}.`);
 
-        // 2. Ritaglia l'immagine (usa image.util)
-        log('Avvio ritaglio immagine...');
-        const croppedImageDataUrl = await imageUtil.cropImage(fullImageDataUrl, selectionData);
-        if (!croppedImageDataUrl) throw new Error('cropImage non ha restituito una data URL.');
+        await sendMessageToTab(tabId, { type: MSG_TYPE_SAVE_SUCCESS, message: 'Area catturata e salvata!' });
+    } catch (err) {
+        const msg = extractUserErrorMessage(err);
+        if (isQuotaError(err)) console.warn('Limite di quota raggiunto.');
 
-        // 3. Genera la miniatura (usa image.util)
-        log('Avvio generazione miniatura...');
-        const thumbnailUrl = await imageUtil.createThumbnail(croppedImageDataUrl, 200);
-        if (!thumbnailUrl) throw new Error('createThumbnail non ha restituito una data URL.');
-
-        // 4. Prepara e salva i dati usando la facade storage
-        const dataToSave: SavedCaptureData = {
-            full: croppedImageDataUrl,
-            thumb: thumbnailUrl,
-        };
-        log('Salvataggio dati...');
-        await storageSet({ [timestampKey]: dataToSave }); // Usa facade storage
-        log(`Dati salvati con chiave ${timestampKey}.`);
-
-        // 5. Notifica successo al content script usando la facade messaging
-        const successMsg: string = 'Area catturata e salvata!';
-        log(`Invio notifica successo a tab ${sourceTabId}`);
-        await sendMessageToTab(sourceTabId, { type: MSG_TYPE_SAVE_SUCCESS, message: successMsg }); // Usa facade messaging
-    } catch (error: unknown) {
-        console.error('Errore durante il processo processCaptureRequest:', error);
-        // Estrae messaggio user-friendly usando errorUtils importato
-        const userErrorMessage: string = extractUserErrorMessage(error);
-        // Log specifico per quota error
-        if (isQuotaError(error)) {
-            console.warn('processCaptureRequest: Errore QUOTA rilevato.');
-        }
-        log(`Invio notifica errore a tab ${sourceTabId}`);
         try {
-            // Notifica errore al content script usando la facade messaging
-            await sendMessageToTab(sourceTabId, { type: MSG_TYPE_SAVE_ERROR, message: userErrorMessage });
-        } catch (notifyError) {
-            console.error(`Impossibile inviare notifica errore a tab ${sourceTabId}:`, notifyError);
+            await sendMessageToTab(tabId, { type: MSG_TYPE_SAVE_ERROR, message: msg });
+        } catch (notifyErr) {
+            console.error(`Errore durante notifica errore a tab ${tabId}:`, notifyErr);
         }
     }
 }
