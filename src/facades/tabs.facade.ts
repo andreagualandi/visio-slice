@@ -1,4 +1,4 @@
-// tabs-facade.ts
+// facades/tabs.facade.ts
 
 import { ExtensionMessage } from '../shared/types';
 

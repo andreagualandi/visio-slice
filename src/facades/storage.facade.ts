@@ -1,4 +1,4 @@
-// src/shared/storage.util.ts
+// facades/storage.facade.ts
 
 /**
  * Recupera uno o più elementi da chrome.storage.local.

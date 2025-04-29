@@ -1,16 +1,16 @@
 // captureOrchestrator.ts
 
 // Importa Facades
-import { sendMessageToTab, captureVisibleTab } from './tabs.facade';
-import { storageSet } from '../shared/storage.util'; // Assumendo percorso corretto
+import { sendMessageToTab, captureVisibleTab } from '../../facades/tabs.facade';
+import { storageSet } from '../../facades/storage.facade';
 
 // Importa Utils
-import { extractUserErrorMessage, isQuotaError } from '../shared/error.util';
-import * as imageUtil from '../shared/image.util';
+import { extractUserErrorMessage, isQuotaError } from '../../shared/error.util';
+import * as imageUtil from '../../shared/image.util';
 
 // Importa Costanti
-import { STORAGE_KEY_PREFIX_CAPTURE, MSG_TYPE_SAVE_SUCCESS, MSG_TYPE_SAVE_ERROR } from '../shared/constants';
-import { SavedCaptureData, SelectionPayload } from '../shared/types';
+import { STORAGE_KEY_PREFIX_CAPTURE, MSG_TYPE_SAVE_SUCCESS, MSG_TYPE_SAVE_ERROR } from '../../shared/constants';
+import { SavedCaptureData, SelectionPayload } from '../../shared/types';
 
 const log = (...args: unknown[]): void => console.log('[CaptureOrchestrator]', ...args);
 

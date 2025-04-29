@@ -4,7 +4,7 @@
 import styles from './gallery.module.scss';
 
 // Importa utility e costanti condivise (percorsi aggiornati, senza .ts)
-import { storageGet, storageSet, storageRemove } from '../shared/storage.util';
+import { storageGet, storageSet, storageRemove } from '../facades/storage.facade';
 import { STORAGE_KEY_LAYOUT_PREFERENCE, STORAGE_KEY_PREFIX_CAPTURE } from '../shared/constants';
 import { formatTimestamp, formatBytes } from '../shared/format.util';
 import { showModal, hideModal, updateWorkspaceMessageVisibility } from '../shared/ui.helpers';

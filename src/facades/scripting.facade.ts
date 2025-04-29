@@ -1,4 +1,4 @@
-// scripting-facade.ts
+// facades/scripting.facade.ts
 
 /**
  * Esegue uno o più script nel contesto di una scheda specificata.

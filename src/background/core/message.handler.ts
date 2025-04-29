@@ -1,12 +1,12 @@
 // messageHandler.ts
 
 // Importa Costanti e Tipi Condivisi
-import { MSG_TYPE_SELECTION_COMPLETE, MSG_TYPE_SAVE_ERROR, START_CAPTURE_REQUEST } from '../shared/constants';
+import { MSG_TYPE_SELECTION_COMPLETE, MSG_TYPE_SAVE_ERROR, START_CAPTURE_REQUEST } from '../../shared/constants';
 
-import { getActiveTab, sendMessageToTab } from './tabs.facade';
+import { getActiveTab, sendMessageToTab } from '../../facades/tabs.facade';
 import { activateOrInjectContentScript } from './activation.handler';
 import { processCaptureRequest } from './capture.orchestrator';
-import { SelectionPayload } from '../shared/types';
+import { SelectionPayload } from '../../shared/types';
 
 const log = (...args: unknown[]): void => console.log('[MessageHandler]', ...args);
 

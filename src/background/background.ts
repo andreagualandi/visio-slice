@@ -1,6 +1,6 @@
 // src/background/background.ts
 
-import { handleRuntimeMessage } from './message.handler';
+import { handleRuntimeMessage } from './core/message.handler';
 
 // delega tutta la gestione all'handler importato.
 chrome.runtime.onMessage.addListener(handleRuntimeMessage);

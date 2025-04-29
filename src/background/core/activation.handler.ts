@@ -1,10 +1,10 @@
 // activation.handler.ts
 
-import { sendMessageToTab } from './tabs.facade';
-import { executeScript } from './scripting.facade';
-import { MSG_TYPE_ACTIVATE_CAPTURE, CONTENT_SCRIPT_READY } from '../shared/constants';
+import { sendMessageToTab } from '../../facades/tabs.facade';
+import { executeScript } from '../../facades/scripting.facade';
+import { MSG_TYPE_ACTIVATE_CAPTURE, CONTENT_SCRIPT_READY } from '../../shared/constants';
 //necessario import con ?script per plugin crxjs/vite-plugin
-import contentScriptPath from '../content/content.ts?script';
+import contentScriptPath from '../../content/content.ts?script';
 
 const log = (...args: unknown[]): void => console.log('[ActivationHandler]', ...args);
 
