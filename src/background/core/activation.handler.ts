@@ -1,86 +1,76 @@
-// activation.handler.ts
-
 import { sendMessageToTab } from '../../facades/tabs.facade';
 import { executeScript } from '../../facades/scripting.facade';
 import { MSG_TYPE_ACTIVATE_CAPTURE, CONTENT_SCRIPT_READY } from '../../shared/constants';
-//necessario import con ?script per plugin crxjs/vite-plugin
 import contentScriptPath from '../../content/content.ts?script';
 
 const log = (...args: unknown[]): void => console.log('[ActivationHandler]', ...args);
 
-/**
- * Tenta di attivare il content script inviando un messaggio. Se fallisce,
- * inietta lo script, attende la conferma 'CONTENT_SCRIPT_READY', e poi
- * invia il messaggio di attivazione.
- * @param targetTabId L'ID della scheda target.
- * @throws Lancia un errore se l'iniezione o l'attivazione finale falliscono gravemente.
- */
-export async function activateOrInjectContentScript(targetTabId: number): Promise<void> {
+function isContentScriptReadyMessage(msg: unknown, tabId: number, sender: chrome.runtime.MessageSender): boolean {
+    return (
+        typeof msg === 'object' &&
+        msg !== null &&
+        'type' in msg &&
+        (msg as { type: string }).type === CONTENT_SCRIPT_READY &&
+        sender.tab?.id === tabId
+    );
+}
+
+async function waitForContentScriptReady(tabId: number, timeoutMs = 5000): Promise<void> {
+    return new Promise((resolve, reject) => {
+        const listener = (msg: unknown, sender: chrome.runtime.MessageSender): boolean => {
+            if (isContentScriptReadyMessage(msg, tabId, sender)) {
+                log(`CONTENT_SCRIPT_READY ricevuto da tab ${tabId}.`);
+                cleanup();
+                resolve();
+                return false;
+            }
+            return false;
+        };
+
+        const timeoutId = setTimeout(() => {
+            cleanup();
+            log(`Timeout (${timeoutMs}ms) in attesa di CONTENT_SCRIPT_READY da tab ${tabId}.`);
+            reject(new Error('Timeout waiting for content script ready.'));
+        }, timeoutMs);
+
+        const cleanup = () => {
+            chrome.runtime.onMessage.removeListener(listener);
+            clearTimeout(timeoutId);
+        };
+
+        chrome.runtime.onMessage.addListener(listener);
+    });
+}
+
+export async function activateOrInjectContentScript(tabId: number): Promise<void> {
     try {
-        // 1. Tenta di inviare il messaggio di attivazione iniziale
-        log(`Invio tentativo 1: ACTIVATE_CAPTURE a tab ${targetTabId}`);
-        // Usa la facade per inviare il messaggio
-        await sendMessageToTab(targetTabId, { type: MSG_TYPE_ACTIVATE_CAPTURE });
-        log(`Messaggio ACTIVATE_CAPTURE inviato (tentativo 1) con successo a tab ${targetTabId}.`);
-        // Se questo ha successo, il content script era già lì e attivo (o si è attivato), abbiamo finito.
-    } catch (error: unknown) {
-        // 2. Se l'invio iniziale fallisce (probabilmente script non presente/attivo), procedi con l'iniezione
+        log(`Invio ACTIVATE_CAPTURE (tentativo 1) a tab ${tabId}`);
+        await sendMessageToTab(tabId, { type: MSG_TYPE_ACTIVATE_CAPTURE });
+        log(`Messaggio ACTIVATE_CAPTURE inviato con successo a tab ${tabId}.`);
+        return;
+    } catch (error) {
         log(
-            `Invio messaggio (tentativo 1) a tab ${targetTabId} fallito (${error instanceof Error ? error.message : String(error)}). Inietto script...`
+            `ACTIVATE_CAPTURE fallito: ${error instanceof Error ? error.message : String(error)}. Procedo con iniezione...`
         );
-        try {
-            // 3. Inietta lo script usando la facade
-            // Assicurati che contentScriptPath sia valido
-            if (!contentScriptPath) {
-                throw new Error('Percorso content script non valido.');
-            }
-            await executeScript({ tabId: targetTabId }, [contentScriptPath]);
-            log(`Script '${contentScriptPath}' iniettato con successo in tab ${targetTabId}.`);
+    }
 
-            // 4. Attendi il segnale "READY" dal content script appena iniettato (Handshake)
-            log(`In attesa del messaggio CONTENT_SCRIPT_READY da tab ${targetTabId}...`);
-            try {
-                // Crea una Promise per attendere il messaggio specifico
-                const readyConfirmationPromise = new Promise<void>((resolve, reject) => {
-                    // Listener temporaneo specifico per il messaggio READY da questa tab
-                    const listener = (msg: unknown, sndr: chrome.runtime.MessageSender) => {
-                        if (
-                            typeof msg === 'object' &&
-                            msg !== null &&
-                            'type' in msg &&
-                            msg.type === CONTENT_SCRIPT_READY &&
-                            sndr.tab?.id === targetTabId
-                        ) {
-                            log(`Ricevuto CONTENT_SCRIPT_READY da tab ${targetTabId}.`);
-                            chrome.runtime.onMessage.removeListener(listener);
-                            clearTimeout(timeoutId);
-                            resolve();
-                            return false;
-                        }
-                        return false;
-                    };
-                    const waitTimeout = 5000; // 5 secondi
-                    const timeoutId = setTimeout(() => {
-                        log(`Timeout (${waitTimeout}ms) attesa CONTENT_SCRIPT_READY da tab ${targetTabId}.`);
-                        chrome.runtime.onMessage.removeListener(listener);
-                        reject(new Error('Timeout waiting for content script ready signal.'));
-                    }, waitTimeout);
-                    chrome.runtime.onMessage.addListener(listener);
-                });
-
-                await readyConfirmationPromise;
-
-                // 5. DOPO aver ricevuto la conferma, invia il messaggio di attivazione finale usando la facade
-                log(`Invio ACTIVATE_CAPTURE (post-conferma) a tab ${targetTabId}`);
-                await sendMessageToTab(targetTabId, { type: MSG_TYPE_ACTIVATE_CAPTURE });
-                log(`Messaggio ACTIVATE_CAPTURE inviato (post-conferma) con successo a tab ${targetTabId}.`);
-            } catch (waitError: unknown) {
-                console.error(`Errore durante attesa/attivazione post-iniezione in tab ${targetTabId}:`, waitError);
-                throw waitError;
-            }
-        } catch (injectionError: unknown) {
-            console.error(`Errore durante INIEZIONE script in tab ${targetTabId}:`, injectionError);
-            throw injectionError;
+    try {
+        if (!contentScriptPath) {
+            throw new Error('Percorso content script non valido.');
         }
+
+        log(`Inietto script '${contentScriptPath}' in tab ${tabId}...`);
+        await executeScript({ tabId }, [contentScriptPath]);
+        log(`Script iniettato con successo in tab ${tabId}.`);
+
+        log(`In attesa di CONTENT_SCRIPT_READY da tab ${tabId}...`);
+        await waitForContentScriptReady(tabId);
+
+        log(`Invio ACTIVATE_CAPTURE (post-iniezione) a tab ${tabId}`);
+        await sendMessageToTab(tabId, { type: MSG_TYPE_ACTIVATE_CAPTURE });
+        log(`Messaggio ACTIVATE_CAPTURE (post-iniezione) inviato con successo a tab ${tabId}.`);
+    } catch (err) {
+        console.error(`Errore durante iniezione/attesa/attivazione per tab ${tabId}:`, err);
+        throw err;
     }
 }

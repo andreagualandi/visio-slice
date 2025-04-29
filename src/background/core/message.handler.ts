@@ -81,6 +81,7 @@ export const handleRuntimeMessage = (
             return false;
 
         default:
+            // I messaggi che finiscono qua non è detto che debbano essere gestiti qui, potrebbero essere gestiti in altre parti da altri listeners
             log('Tipo di messaggio non gestito:', message.type);
             return false;
     }
