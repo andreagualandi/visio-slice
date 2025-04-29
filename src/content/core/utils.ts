@@ -1,4 +1,4 @@
-// utils.ts
+// src/content/core/utils.ts
 
 /**
  * Imposta la proprietà CSS clip-path di un elemento.

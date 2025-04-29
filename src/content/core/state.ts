@@ -1,4 +1,4 @@
-// state.ts
+// src/content/core/state.ts
 
 // --- Definizione Tipi e Interfacce Esportate ---
 

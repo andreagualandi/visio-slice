@@ -1,4 +1,4 @@
-// interaction.ts
+// src/content/core/interaction.ts
 import { appState, AppState, Rect } from './state';
 import { updateSelectionUI } from './ui';
 import { simpleThrottle } from './utils';

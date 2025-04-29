@@ -1,4 +1,4 @@
-// ui.ts
+// src/content/core/ui.ts
 import { appState, Rect } from './state';
 import { handleSaveClick } from './handlers';
 import { setClipPath } from './utils';

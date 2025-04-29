@@ -1,7 +1,7 @@
 // src/content/content.ts
 
 import { CONTENT_SCRIPT_READY } from '../shared/constants';
-import { handleBackgroundMessages } from './handlers';
+import { handleBackgroundMessages } from './core/handlers';
 
 // --- Inizio IIFE ---
 (function () {

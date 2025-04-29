@@ -1,4 +1,4 @@
-// drawing.ts
+// src/content/core/drawing.ts
 import { appState, AppState, Rect } from './state';
 import { showToast } from './ui';
 import { setClipPath, simpleThrottle } from './utils';
