@@ -47,3 +47,37 @@ export const storageRemove = (keys: string | string[]): Promise<void> =>
             resolve();
         });
     });
+
+/**
+ * Ottiene lo spazio totale in byte utilizzato dall'estensione nello storage locale.
+ * @returns Una Promise che risolve con il numero di byte utilizzati.
+ * @rejects Se l'API non è disponibile o se si verifica un errore durante la chiamata.
+ */
+export const getStorageBytesInUse = (): Promise<number> => {
+    return new Promise((resolve, reject) => {
+        // Verifica disponibilità API
+        if (!chrome.storage || !chrome.storage.local || !chrome.storage.local.getBytesInUse) {
+            const errorMsg = 'API chrome.storage.local.getBytesInUse non disponibile.';
+            console.warn(errorMsg);
+            return reject(new Error(errorMsg));
+        }
+
+        try {
+            // Chiama l'API Chrome. Il primo argomento null significa "tutto lo storage"
+            chrome.storage.local.getBytesInUse(null, (bytes) => {
+                // Controlla l'errore specifico di Chrome nel callback
+                if (chrome.runtime.lastError) {
+                    console.error('Storage getBytesInUse error in facade:', chrome.runtime.lastError);
+                    // Rigetta la promise con l'errore di Chrome
+                    return reject(chrome.runtime.lastError);
+                }
+                // Successo: risolvi la promise con il numero di bytes
+                resolve(bytes);
+            });
+        } catch (e) {
+            // Cattura errori sincroni (meno probabili ma possibile)
+            console.error('Error calling getBytesInUse in facade:', e);
+            return reject(e);
+        }
+    });
+};

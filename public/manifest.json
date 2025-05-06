@@ -20,7 +20,7 @@
     },
     "web_accessible_resources": [
         {
-            "resources": ["src/gallery/gallery.html", "assets/*"],
+            "resources": ["src/gallery/index.html", "assets/*"],
             "matches": ["<all_urls>"]
         }
     ]

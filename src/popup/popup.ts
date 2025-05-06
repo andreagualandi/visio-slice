@@ -19,8 +19,8 @@ startCaptureBtn?.addEventListener('click', () => {
 // Bottone "Vedi Catture"
 viewCapturesBtn?.addEventListener('click', () => {
     console.log('Popup: Richiesta apertura galleria...');
-    // Costruisci l'URL della pagina della galleria (ex gallery.html)
-    const galleryUrl = chrome.runtime.getURL('src/gallery/gallery.html');
+    // Costruisci l'URL della pagina della galleria (ex index.html)
+    const galleryUrl = chrome.runtime.getURL('src/gallery/index.html');
     // Apri la pagina in una nuova scheda
     chrome.tabs.create({ url: galleryUrl });
     // Chiudi il popup (opzionale)

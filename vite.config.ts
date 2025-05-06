@@ -16,7 +16,7 @@ export default defineConfig({
                 popup: resolve(__dirname, 'src/popup/popup.html'),
 
                 // Pagina Galleria (ex gallery - assicurati che il percorso sia corretto)
-                gallery: resolve(__dirname, 'src/gallery/gallery.html'),
+                gallery: resolve(__dirname, 'src/gallery/index.html'),
 
                 // Non è necessario aggiungere qui background.ts o content.ts
                 // perché crx({ manifest }) di solito li gestisce automaticamente
