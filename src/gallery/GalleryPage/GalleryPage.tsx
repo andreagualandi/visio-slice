@@ -1,195 +1,88 @@
-// App/src/gallery/GalleryPage/GalleryPage.tsx
-import React, { useState, useEffect } from 'react';
-import { storageGet, storageRemove, getStorageBytesInUse } from '../../facades/storage.facade.ts';
-import { STORAGE_KEY_PREFIX_CAPTURE } from '../../shared/constants.ts';
-import Sidebar from '../Sidebar/Sidebar.tsx';
-import Workspace from '../Workspace/Workspace.tsx';
-import DeleteConfirmationModal from '../DeleteConfirmationModal/DeleteConfirmationModal.tsx';
+// src/gallery/GalleryPage/GalleryPage.tsx
+import React, { useEffect, useCallback } from 'react';
+import { storageRemove } from '../../facades/storage.facade';
 
-// Interfaccia per i dati di una cattura salvata
-interface StoredItemData {
-    thumb: string; // Data URL miniatura
-    full: string; // Data URL immagine completa
-}
+// Importa componenti UI
+import Sidebar from '../Sidebar/Sidebar';
+import Workspace from '../Workspace/Workspace';
+import DeleteConfirmationModal from '../DeleteConfirmationModal/DeleteConfirmationModal';
 
-// Interfaccia per un elemento cattura nello stato del componente
-export interface CaptureItem {
-    key: string; // Chiave originale dello storage (es. capture_167888...)
-    data: StoredItemData;
-}
+// Importa hooks
+import { useCaptures, CaptureItem } from './hooks/useCaptures';
+import { useSelection } from './hooks/useSelection';
+import { useSliderState } from './hooks/useSliderState';
+import { useStorageUsage } from './hooks/useStorageUsage';
+import { useDeleteConfirmation } from './hooks/useDeleteConfirmation';
 
-// Interfaccia per lo stato dello storage
-interface StorageUsageState {
-    bytes: number | null;
-    loading: boolean;
-    error: string | null;
-}
+// Esporta di nuovo CaptureItem se serve ad altri componenti importarla da qui
+export type { CaptureItem };
 
-// Componente principale della pagina galleria
 const GalleryPage: React.FC = () => {
-    // Stati del componente
-    const [captures, setCaptures] = useState<CaptureItem[]>([]);
-    const [isLoading, setIsLoading] = useState<boolean>(true);
-    const [error, setError] = useState<string | null>(null);
-    const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [itemToDeleteId, setItemToDeleteId] = useState<string | null>(null);
-    const [columnPercent, setColumnPercent] = useState<number>(33);
-    const [storageUsage, setStorageUsage] = useState<StorageUsageState>({
-        bytes: null,
-        loading: true,
-        error: null,
-    });
+    // Usa i custom hooks per gestire gli stati e la logica
+    const { captures, isLoading: isLoadingCaptures, error: capturesError, setCaptures } = useCaptures();
+    const { selectedIds, handleToggleSelection, setSelectedIds } = useSelection();
+    const { columnPercent, handleSliderChange } = useSliderState(33); // Usa valore iniziale
+    const { storageUsage, fetchStorageUsage } = useStorageUsage();
 
-    // Effetto per caricare le catture al mount del componente
-    useEffect(() => {
-        const loadCaptures = async () => {
-            setIsLoading(true);
-            setStorageUsage((prev) => ({ ...prev, loading: true, error: null }));
-            setError(null);
-            let capturesLoadedSuccessfully = false;
+    // Azione di eliminazione effettiva (callback per il hook della modale)
+    const handleDeleteAction = useCallback(
+        async (keyToDelete: string) => {
+            // Resetta errore generale prima di provare
+            // TODO: Potrebbe servire uno stato di errore specifico per l'eliminazione
+            // setError(null);
             try {
-                // 1. Recupera tutti gli items dallo storage
-                const items: Record<string, unknown> = await storageGet(null);
-                // 2. Filtra le chiavi rilevanti
-                const captureKeys = Object.keys(items).filter((key) => key.startsWith(STORAGE_KEY_PREFIX_CAPTURE));
-                // 3. Ordina le chiavi per timestamp (dal più recente al meno recente)
-                captureKeys.sort((a, b) => {
-                    const timestampA = parseInt(a.substring(STORAGE_KEY_PREFIX_CAPTURE.length), 10) || 0;
-                    const timestampB = parseInt(b.substring(STORAGE_KEY_PREFIX_CAPTURE.length), 10) || 0;
-                    return timestampB - timestampA; // Ordine decrescente
+                await storageRemove(keyToDelete);
+                // Aggiorna stati gestiti da altri hook
+                setCaptures((prev) => prev.filter((c) => c.key !== keyToDelete));
+                setSelectedIds((prev) => {
+                    if (!prev.has(keyToDelete)) return prev;
+                    const next = new Set(prev);
+                    next.delete(keyToDelete);
+                    return next;
                 });
-                // 4. Formatta i dati e valida la struttura
-                const formattedCaptures: CaptureItem[] = captureKeys
-                    .map((key) => {
-                        const itemData = items[key];
-                        // Validazione semplice (può essere resa più robusta)
-                        if (
-                            typeof itemData === 'object' &&
-                            itemData !== null &&
-                            'thumb' in itemData &&
-                            typeof itemData.thumb === 'string' &&
-                            'full' in itemData &&
-                            typeof itemData.full === 'string'
-                        ) {
-                            return { key, data: itemData as StoredItemData };
-                        } else {
-                            console.warn(`Dati non validi per la chiave ${key}:`, itemData);
-                            return null; // Segna come nullo per filtrarlo dopo
-                        }
-                    })
-                    .filter((item): item is CaptureItem => item !== null); // Filtra eventuali elementi nulli
-
-                // 5. Aggiorna lo stato
-                setCaptures(formattedCaptures);
-                capturesLoadedSuccessfully = true;
+                console.log('Cattura eliminata (via hook):', keyToDelete);
+                fetchStorageUsage(); // Aggiorna lo spazio usato
             } catch (err) {
-                console.error('Errore durante il caricamento delle catture:', err);
-                setError('Errore durante il caricamento delle catture.');
-                setStorageUsage({ bytes: null, loading: false, error: 'Dipende da errore catture' });
-            } finally {
-                setIsLoading(false);
-                if (capturesLoadedSuccessfully) {
-                    fetchStorageUsage();
-                }
+                console.error(`Errore durante l'eliminazione ${keyToDelete} (hook):`, err);
+                // TODO: Gestire errore eliminazione (es. notifica)
+                // Potremmo passare setError a useDeleteConfirmation o gestirlo qui
+                // setError(`Errore eliminazione: ${err instanceof Error ? err.message : '?'}`);
+                throw err; // Rilancia l'errore così useDeleteConfirmation sa che è fallito
             }
-        };
-        loadCaptures();
-        // L'array vuoto di dipendenze assicura che l'effetto venga eseguito solo una volta al mount
-    }, []);
+        },
+        [setCaptures, setSelectedIds, fetchStorageUsage]
+    ); // Includi setter e fetch nelle dipendenze
 
-    // --- FETCH STORAGE USAGE ---
-    const fetchStorageUsage = async () => {
-        // Rendi la funzione async
-        setStorageUsage((prev) => ({ ...prev, loading: true, error: null }));
+    // Hook per la modale, passa l'azione di eliminazione
+    const {
+        isModalOpen,
+        isDeleting, // Stato di caricamento per l'eliminazione
+        openDeleteModal,
+        closeDeleteModal,
+        confirmDeleteHandler,
+    } = useDeleteConfirmation({ onConfirmAction: handleDeleteAction });
 
-        try {
-            const bytes = await getStorageBytesInUse();
-            setStorageUsage({ bytes: bytes, loading: false, error: null });
-        } catch (err) {
-            console.error('Errore fetchStorageUsage da facade:', err);
-            // Prova a estrarre un messaggio d'errore più utile
-            let errorMessage = 'Errore calcolo spazio';
-            if (err instanceof Error) {
-                errorMessage = err.message; // Usa il messaggio dell'oggetto Error
-            } else if (typeof err === 'object' && err !== null && 'message' in err && typeof err.message === 'string') {
-                errorMessage = err.message; // Gestisce l'errore di chrome.runtime.lastError
-            }
-            setStorageUsage({ bytes: null, loading: false, error: errorMessage });
+    // Effetto per caricare lo storage iniziale (solo se non già caricato)
+    useEffect(() => {
+        if (!isLoadingCaptures && !storageUsage.bytes && !storageUsage.loading && !storageUsage.error) {
+            fetchStorageUsage();
         }
-        // Nota: il loading: false è gestito implicitamente nei setStorageUsage dentro try/catch
-    };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isLoadingCaptures]); // Ricarica solo quando finisce il caricamento catture
 
-    // Handler per toggle selezione (usato sia da SidebarItem che da WorkspaceImage)
-    const handleToggleSelection = (key: string) => {
-        setSelectedIds((prevSelectedIds) => {
-            const newSelectedIds = new Set(prevSelectedIds); // Crea una copia
-            if (newSelectedIds.has(key)) {
-                newSelectedIds.delete(key); // Deseleziona
-            } else {
-                newSelectedIds.add(key); // Seleziona
-            }
-            console.log('Selected IDs:', newSelectedIds); // Log per debug
-            return newSelectedIds; // Ritorna il nuovo Set
-        });
-    };
-
-    // --- CALCOLA CAPTURES SELEZIONATE ---
+    // Calcola catture selezionate (derivato dagli stati ottenuti dagli hook)
     const selectedCaptures = captures.filter((capture) => selectedIds.has(capture.key));
 
-    // --- FUNZIONI PER GESTIRE LA MODALE ---
-    const openDeleteModal = (key: string) => {
-        console.log('[GalleryPage] openDeleteModal chiamata per key:', key);
-        setItemToDeleteId(key);
-        setIsModalOpen(true);
-    };
-
-    const closeDeleteModal = () => {
-        setItemToDeleteId(null);
-        setIsModalOpen(false);
-    };
-
-    // --- HANDLER PER SLIDER CHANGE ---
-    const handleSliderChange = (newValue: number) => {
-        setColumnPercent(newValue);
-        // TODO: Potresti voler persistere questo valore in futuro (es. con storageSet)
-    };
-
-    const handleConfirmDelete = async () => {
-        if (!itemToDeleteId) return;
-        const keyToDelete = itemToDeleteId;
-        closeDeleteModal();
-        setError(null);
-        try {
-            await storageRemove(keyToDelete);
-            setCaptures((prev) => prev.filter((c) => c.key !== keyToDelete));
-            setSelectedIds((prev) => {
-                if (!prev.has(keyToDelete)) return prev;
-                const next = new Set(prev);
-                next.delete(keyToDelete);
-                return next;
-            });
-            console.log('Cattura eliminata con successo:', keyToDelete);
-            fetchStorageUsage();
-        } catch (err) {
-            console.error(`Errore durante l'eliminazione ${keyToDelete}:`, err);
-            setError(`Errore eliminazione: ${err instanceof Error ? err.message : '?'}`);
-        }
-    };
-    // --- FINE FUNZIONI MODALE ---
-
-    console.log('[GalleryPage] Stato isModalOpen prima del render:', isModalOpen);
+    // Combina errori (semplice esempio, potrebbe essere più sofisticato)
+    const displayError = capturesError || storageUsage.error; // Mostra il primo errore incontrato
 
     return (
         <>
-            {' '}
-            {/* Usa un Fragment per includere la modale fuori dal layout flex */}
             <div className="flex h-screen bg-gray-50">
-                {/* Sidebar */}
                 <Sidebar
                     captures={captures}
-                    isLoading={isLoading}
-                    error={error}
+                    isLoading={isLoadingCaptures}
+                    error={displayError}
                     selectedIds={selectedIds}
                     onToggleSelection={handleToggleSelection}
                     onDeleteRequest={openDeleteModal}
@@ -199,16 +92,18 @@ const GalleryPage: React.FC = () => {
                     storageLoading={storageUsage.loading}
                     storageError={storageUsage.error}
                 />
-
-                {/* Workspace */}
                 <Workspace
                     selectedCaptures={selectedCaptures}
                     onRemoveImage={handleToggleSelection}
                     columnPercent={columnPercent}
                 />
             </div>
-            {/* Modale di Conferma */}
-            <DeleteConfirmationModal isOpen={isModalOpen} onConfirm={handleConfirmDelete} onCancel={closeDeleteModal} />
+            <DeleteConfirmationModal
+                isOpen={isModalOpen}
+                onConfirm={confirmDeleteHandler}
+                onCancel={closeDeleteModal}
+                // Potremmo passare isDeleting per disabilitare pulsanti/mostrare loader
+            />
         </>
     );
 };
