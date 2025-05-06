@@ -8,11 +8,8 @@ interface DeleteConfirmationModalProps {
 }
 
 const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = ({ isOpen, onConfirm, onCancel }) => {
-    console.log('[DeleteConfirmationModal] Prop isOpen ricevuta:', isOpen);
     // Se non è aperta, non renderizzare nulla
-    if (!isOpen) {
-        return null;
-    }
+    if (!isOpen) return null;
 
     return (
         // Overlay semi-trasparente che copre tutto
