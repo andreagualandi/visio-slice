@@ -1,5 +1,5 @@
 // src/gallery/ColumnSlider/ColumnSlider.tsx
-import React from 'react';
+import React, { useId } from 'react';
 
 interface ColumnSliderProps {
     label: string;
@@ -12,11 +12,11 @@ interface ColumnSliderProps {
 
 const ColumnSlider: React.FC<ColumnSliderProps> = ({ label, value, onChange, min, max, step }) => {
     const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        // Usa valueAsNumber per ottenere direttamente un numero
         onChange(event.target.valueAsNumber);
     };
 
-    const sliderId = `slider-${label.replace(/\s+/g, '-')}`; // Crea un ID per l'accessibilità
+    const baseId = useId();
+    const sliderId = `slider-${baseId}`; // Crea un ID per l'accessibilità
 
     return (
         <div className="flex flex-col space-y-1">
