@@ -1,6 +1,6 @@
-// src/gallery/StorageInfo.tsx
+// src/gallery/StorageInfo/StorageInfo.tsx
 import React from 'react';
-import { formatBytes } from '../shared/format.util.ts'; // Importa l'utility per formattare
+import { formatBytes } from '../../shared/format.util.ts'; // Importa l'utility per formattare
 
 interface StorageInfoProps {
     usedBytes: number | null;

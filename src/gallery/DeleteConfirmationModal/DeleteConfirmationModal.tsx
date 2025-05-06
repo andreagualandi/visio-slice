@@ -1,4 +1,4 @@
-// src/gallery/DeleteConfirmationModal.tsx
+// src/gallery/DeleteConfirmationModal/DeleteConfirmationModal.tsx
 import React from 'react';
 
 interface DeleteConfirmationModalProps {

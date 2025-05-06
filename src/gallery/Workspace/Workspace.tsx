@@ -1,7 +1,7 @@
-// src/gallery/Workspace.tsx
+// src/gallery/Workspace/Workspace.tsx
 import React from 'react';
 import WorkspaceImage from './WorkspaceImage';
-import { CaptureItem } from './GalleryPage';
+import { CaptureItem } from '../GalleryPage/GalleryPage';
 
 // Props del componente Workspace
 interface WorkspaceProps {

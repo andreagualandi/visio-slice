@@ -1,6 +1,6 @@
-// src/gallery/WorkspaceImage.tsx
+// src/gallery/Workspace/WorkspaceImage.tsx
 import React from 'react';
-import { formatTimestamp } from '../shared/format.util.ts';
+import { formatTimestamp } from '../../shared/format.util.ts';
 
 // Interfaccia per i dati (può essere importata se centralizzata)
 interface StoredItemData {

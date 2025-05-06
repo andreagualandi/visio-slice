@@ -2,7 +2,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import '../index.css'; // Importa gli stili globali Tailwind
-import GalleryPage from './GalleryPage'; // Importa il componente effettivo
+import GalleryPage from './GalleryPage/GalleryPage'; // Importa il componente effettivo
 
 // Trova l'elemento root nell'HTML
 const container = document.getElementById('gallery-root');

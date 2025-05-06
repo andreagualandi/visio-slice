@@ -1,4 +1,4 @@
-// src/gallery/ColumnSlider.tsx
+// src/gallery/ColumnSlider/ColumnSlider.tsx
 import React from 'react';
 
 interface ColumnSliderProps {

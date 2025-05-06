@@ -1,9 +1,9 @@
-// src/gallery/Sidebar.tsx
+// src/gallery/Sidebar/Sidebar.tsx
 import React from 'react';
 import SidebarItem from './SidebarItem';
-import ColumnSlider from './ColumnSlider';
-import StorageInfo from './StorageInfo';
-import { CaptureItem } from './GalleryPage';
+import ColumnSlider from '../ColumnSlider/ColumnSlider';
+import StorageInfo from '../StorageInfo/StorageInfo';
+import { CaptureItem } from '../GalleryPage/GalleryPage';
 
 // Props del componente Sidebar
 interface SidebarProps {

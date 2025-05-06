@@ -1,7 +1,7 @@
-// src/gallery/SidebarItem.tsx
+// src/gallery/Sidebar/SidebarItem.tsx
 import React from 'react';
-import { formatTimestamp } from '../shared/format.util.ts';
-import { CaptureItem } from './GalleryPage';
+import { formatTimestamp } from '../../shared/format.util.ts';
+import { CaptureItem } from '../GalleryPage/GalleryPage.tsx';
 
 // Props del componente SidebarItem
 interface SidebarItemProps {

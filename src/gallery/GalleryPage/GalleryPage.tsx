@@ -1,10 +1,10 @@
-// App/src/gallery/GalleryPage.tsx
+// App/src/gallery/GalleryPage/GalleryPage.tsx
 import React, { useState, useEffect } from 'react';
-import { storageGet, storageRemove, getStorageBytesInUse } from '../facades/storage.facade';
-import { STORAGE_KEY_PREFIX_CAPTURE } from '../shared/constants.ts';
-import Sidebar from './Sidebar';
-import Workspace from './Workspace';
-import DeleteConfirmationModal from './DeleteConfirmationModal';
+import { storageGet, storageRemove, getStorageBytesInUse } from '../../facades/storage.facade.ts';
+import { STORAGE_KEY_PREFIX_CAPTURE } from '../../shared/constants.ts';
+import Sidebar from '../Sidebar/Sidebar.tsx';
+import Workspace from '../Workspace/Workspace.tsx';
+import DeleteConfirmationModal from '../DeleteConfirmationModal/DeleteConfirmationModal.tsx';
 
 // Interfaccia per i dati di una cattura salvata
 interface StoredItemData {
