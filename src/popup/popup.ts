@@ -1,5 +1,6 @@
 // popup.ts
-
+import '../index.css';
+import { START_CAPTURE_REQUEST } from '../shared/constants';
 const startCaptureBtn = document.getElementById('startCaptureBtn');
 const viewCapturesBtn = document.getElementById('viewCapturesBtn');
 
@@ -9,7 +10,7 @@ startCaptureBtn?.addEventListener('click', () => {
     // Invia un messaggio al background script per avviare la cattura
     // sulla scheda attiva corrente.
     chrome.runtime
-        .sendMessage({ type: 'START_CAPTURE_REQUEST' })
+        .sendMessage({ type: START_CAPTURE_REQUEST })
         .then(() => console.log('Popup: Messaggio START_CAPTURE_REQUEST inviato.'))
         .catch((err) => console.error('Popup: Errore invio messaggio:', err));
     // Chiudi il popup dopo aver inviato il messaggio (opzionale)
