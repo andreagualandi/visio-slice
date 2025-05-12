@@ -1,5 +1,21 @@
 /* src/index.css */
 @import 'tailwindcss';
 
+.dark {
+    @theme {
+        --color-gray-50: #fafafa;
+        --color-gray-100: #f5f5f5;
+        --color-gray-200: #e5e5e5;
+        --color-gray-300: #d4d4d4;
+        --color-gray-400: #a1a1a1;
+        --color-gray-500: #737373;
+        --color-gray-600: #52525c;
+        --color-gray-700: #3f3f46;
+        --color-gray-800: #27272a;
+        --color-gray-900: #18181b;
+        --color-gray-950: #09090b;
+    }
+}
+
 /* Puoi aggiungere qui eventuali stili globali personalizzati se necessario */
 @custom-variant dark (&:where(.dark, .dark *));
