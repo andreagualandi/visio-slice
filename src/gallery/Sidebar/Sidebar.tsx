@@ -35,7 +35,7 @@ const Sidebar: React.FC<SidebarProps> = ({
 }) => {
     return (
         // Contenitore principale della sidebar
-        <div className="w-64 bg-white border-r border-gray-200 p-4 flex flex-col h-full flex-shrink-0">
+        <div className="w-64 bg-white border-r border-gray-200 p-4 flex flex-col h-full shrink-0">
             {/* Header Sidebar */}
             <div className="pb-4 border-b border-gray-200">
                 <h2 className="text-lg font-semibold text-gray-700 mb-2">Catture</h2>
@@ -53,7 +53,7 @@ const Sidebar: React.FC<SidebarProps> = ({
             </div>
 
             {/* Lista */}
-            <div className="flex-grow overflow-y-auto py-4">
+            <div className="grow overflow-y-auto py-4">
                 {/* Mostra errore caricamento catture se presente */}
                 {isLoading && <p className="text-gray-500 text-center">Caricamento...</p>}
                 {error && !isLoading && <p className="text-red-500 text-center px-2">{error}</p>}

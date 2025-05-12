@@ -35,7 +35,7 @@ const SidebarItem: React.FC<SidebarItemProps> = ({ item, isSelected, onToggleSel
                 }}
                 title="Elimina cattura"
                 aria-label="Elimina cattura"
-                className="absolute top-1 right-1 bg-red-500/60 text-white rounded-full w-4 h-4 flex items-center justify-center text-[10px] leading-none opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 focus:outline-none focus:ring-1 focus:ring-red-700"
+                className="absolute top-1 right-1 bg-red-500/60 text-white rounded-full w-4 h-4 flex items-center justify-center text-[10px] leading-none opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 focus:outline-hidden focus:ring-1 focus:ring-red-700"
             >
                 {/* Usiamo una 'X' semplice */}
                 &#x2715;
