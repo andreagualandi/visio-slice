@@ -5,7 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>VisioSlice Popup</title>
     </head>
-    <body class="bg-white text-black dark:bg-gray-900 dark:text-white">
+    <body class="bg-white text-black dark:bg-gray-800 dark:text-white">
         <div class="w-64 p-4">
             <header class="mb-4">
                 <h1 class="text-xl font-semibold text-center">VisioSlice</h1>
@@ -15,13 +15,45 @@
                     id="startCaptureBtn"
                     class="w-full flex items-center justify-center px-4 py-2 border border-gray-300 bg-transparent rounded-md shadow-xs text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-white"
                 >
-                    Capture Visible Tab
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        class="lucide lucide-camera-icon lucide-camera"
+                    >
+                        <path
+                            d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"
+                        />
+                        <circle cx="12" cy="13" r="3" />
+                    </svg>
                 </button>
                 <button
                     id="viewCapturesBtn"
                     class="w-full flex items-center justify-center px-4 py-2 border border-gray-300 bg-transparent rounded-md shadow-xs text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-white"
                 >
-                    Open Gallery
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        class="lucide lucide-images-icon lucide-images"
+                    >
+                        <path d="M18 22H4a2 2 0 0 1-2-2V6" />
+                        <path d="m22 13-1.296-1.296a2.41 2.41 0 0 0-3.408 0L11 18" />
+                        <circle cx="12" cy="8" r="2" />
+                        <rect width="16" height="16" x="6" y="2" rx="2" />
+                    </svg>
                 </button>
             </main>
         </div>
